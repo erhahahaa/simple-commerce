@@ -65,3 +65,6 @@ export const GetSessionResponseSchema = createApiResponseSchema(
 	}),
 );
 export type GetSessionResponse = z.infer<typeof GetSessionResponseSchema>;
+
+export const SocialProviderSchema = z.enum(["google", "apple", "github"]);
+export type SocialProvider = z.infer<typeof SocialProviderSchema>;

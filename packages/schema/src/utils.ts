@@ -29,3 +29,8 @@ export const createApiResponseSchema = <T extends z.ZodTypeAny>(
 export type ApiResponse<T extends z.ZodTypeAny> = z.infer<
 	ReturnType<typeof createApiResponseSchema<T>>
 >;
+
+export const EmptyResponseSchema = createApiResponseSchema(
+	z.union([z.null(), z.undefined(), z.object({})]),
+);
+export type EmptyResponse = z.infer<typeof EmptyResponseSchema>;
