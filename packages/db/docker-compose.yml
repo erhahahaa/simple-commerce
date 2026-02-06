@@ -2,7 +2,7 @@ name: simple-commerce
 
 services:
   postgres:
-    image: postgres
+    image: postgres:17
     container_name: simple-commerce-postgres
     environment:
       POSTGRES_DB: simple-commerce
