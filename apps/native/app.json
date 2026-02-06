@@ -4,17 +4,37 @@
 		"userInterfaceStyle": "automatic",
 		"orientation": "default",
 		"web": {
-			"bundler": "metro"
+			"bundler": "metro",
+			"favicon": "./assets/images/favicon.png"
 		},
-		"name": "simple-commerce",
+		"name": "Simple Commerce",
 		"slug": "simple-commerce",
-		"plugins": ["expo-font", "expo-web-browser", "expo-secure-store"],
+		"icon": "./assets/images/icon.png",
+		"splash": {
+			"image": "./assets/images/splash-icon.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#ffffff"
+		},
+		"plugins": [
+			"expo-font",
+			"expo-web-browser",
+			"expo-secure-store",
+			"expo-asset"
+		],
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
 		},
 		"android": {
-			"package": "com.simplecommerce.app"
+			"package": "com.simplecommerce.app",
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/images/android-icon-foreground.png",
+				"backgroundImage": "./assets/images/android-icon-background.png",
+				"monochromeImage": "./assets/images/android-icon-monochrome.png"
+			}
+		},
+		"ios": {
+			"bundleIdentifier": "com.simplecommerce.app"
 		}
 	}
 }
