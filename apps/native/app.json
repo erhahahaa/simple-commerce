@@ -1,0 +1,17 @@
+{
+	"expo": {
+		"scheme": "simple-commerce",
+		"userInterfaceStyle": "automatic",
+		"orientation": "default",
+		"web": {
+			"bundler": "metro"
+		},
+		"name": "simple-commerce",
+		"slug": "simple-commerce",
+		"plugins": ["expo-font"],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		}
+	}
+}

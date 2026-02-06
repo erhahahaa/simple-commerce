@@ -1,0 +1,25 @@
+{
+	"name": "@simple-commerce/auth",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@better-auth/expo": "catalog:",
+		"@simple-commerce/db": "workspace:*",
+		"@simple-commerce/env": "workspace:*",
+		"better-auth": "catalog:",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@simple-commerce/config": "workspace:*",
+		"typescript": "catalog:"
+	}
+}
