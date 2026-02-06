@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -11,8 +11,7 @@ export default function AuthLayout() {
 	const session = useGetSession();
 
 	if (session.data) {
-		router.replace("/(app)");
-		return null;
+		return <Redirect href="/" />;
 	}
 
 	return (
