@@ -2,6 +2,7 @@ import { expo } from "@better-auth/expo";
 import { db } from "@simple-commerce/db";
 import * as schema from "@simple-commerce/db/schema/auth";
 import { env } from "@simple-commerce/env/server";
+import { mailer } from "@simple-commerce/mailer";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
@@ -25,6 +26,17 @@ export const auth = betterAuth({
 	],
 	emailAndPassword: {
 		enabled: true,
+		sendResetPassword: async ({ user, token }) => {
+			void mailer.sendResetPasswordEmail({
+				to: user.email,
+				name: user.name ?? undefined,
+				token,
+			});
+		},
+		onPasswordReset: async ({ user }, _request) => {
+			// your logic here
+			console.log(`Password for user ${user.email} has been reset.`);
+		},
 	},
 	advanced: {
 		defaultCookieAttributes: {

@@ -36,6 +36,7 @@
 		"db:watch": "turbo -F @simple-commerce/db db:watch",
 		"db:stop": "turbo -F @simple-commerce/db db:stop",
 		"db:down": "turbo -F @simple-commerce/db db:down",
+		"email:dev": "turbo -F @simple-commerce/mailer email:dev",
 		"check": "biome check --write ."
 	},
 	"dependencies": {

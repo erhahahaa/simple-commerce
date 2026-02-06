@@ -17,6 +17,8 @@
 		"@simple-commerce/auth": "workspace:*",
 		"@simple-commerce/db": "workspace:*",
 		"@simple-commerce/env": "workspace:*",
+		"react": "19.2.4",
+		"react-dom": "19.2.4",
 		"better-auth": "catalog:",
 		"dotenv": "catalog:",
 		"hono": "catalog:",
@@ -25,6 +27,8 @@
 	"devDependencies": {
 		"@simple-commerce/config": "workspace:*",
 		"@types/bun": "catalog:",
+		"@types/react": "^19.2.13",
+		"@types/react-dom": "^19.2.3",
 		"tsdown": "^0.16.5",
 		"typescript": "catalog:"
 	}

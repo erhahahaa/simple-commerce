@@ -13,6 +13,9 @@ export const env = createEnv({
 			.default("development"),
 		GOOGLE_CLIENT_ID: z.string().min(1),
 		GOOGLE_CLIENT_SECRET: z.string().min(1),
+		RESEND_API_KEY: z.string().min(1),
+		// Optional: Expo Go URL for development deep links (e.g., "exp://192.168.1.100:8081")
+		EXPO_GO_URL: z.string().optional(),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

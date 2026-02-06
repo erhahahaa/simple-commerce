@@ -66,5 +66,25 @@ export const GetSessionResponseSchema = createApiResponseSchema(
 );
 export type GetSessionResponse = z.infer<typeof GetSessionResponseSchema>;
 
+export const ForgotPasswordRequestSchema = z.object({
+	email: z
+		.email("Invalid email address")
+		.min(1, "Email is required")
+		.max(255, "Email is too long"),
+});
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
+
+export const ResetPasswordRequestSchema = z
+	.object({
+		token: z.string().min(1, "Token is required"),
+		newPassword: PasswordSchema,
+		confirmNewPassword: z.string().min(1, "Please confirm your new password"),
+	})
+	.refine((data) => data.newPassword === data.confirmNewPassword, {
+		message: "Passwords do not match",
+		path: ["confirmNewPassword"],
+	});
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;
+
 export const SocialProviderSchema = z.enum(["google", "apple", "github"]);
 export type SocialProvider = z.infer<typeof SocialProviderSchema>;

@@ -8,10 +8,13 @@
 		},
 		"name": "simple-commerce",
 		"slug": "simple-commerce",
-		"plugins": ["expo-font"],
+		"plugins": ["expo-font", "expo-web-browser", "expo-secure-store"],
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
+		},
+		"android": {
+			"package": "com.simplecommerce.app"
 		}
 	}
 }
