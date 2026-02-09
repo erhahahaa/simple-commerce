@@ -1,27 +1,46 @@
 import { env } from "@simple-commerce/env/server";
 import {
-	CitySchema,
-	GetShippingCostSchema,
-	ProvinceSchema,
-	ShippingCostResultSchema,
+	CalculateDomesticCostSchema,
+	type DomesticDestination,
+	DomesticDestinationSchema,
+	SearchDestinationSchema,
+	type ShippingCostResultV2,
+	ShippingCostResultV2Schema,
+	type TrackingResult,
+	TrackingResultSchema,
+	TrackWaybillSchema,
 } from "@simple-commerce/schema";
 import { z } from "zod";
 
 import { publicProcedure } from "../index";
 
-// Raja Ongkir API response type
-interface RajaOngkirResponse {
-	rajaongkir: {
-		status: {
-			code: number;
-			description: string;
-		};
-		results: unknown;
+// ============================================
+// Raja Ongkir API V2 Types
+// ============================================
+
+/**
+ * V2 API Response wrapper
+ */
+interface RajaOngkirV2Response<T> {
+	meta: {
+		message: string;
+		code: number;
+		status: string;
 	};
+	data: T;
 }
 
-// Raja Ongkir API helper
-async function rajaOngkirFetch(endpoint: string, options?: RequestInit) {
+// ============================================
+// Raja Ongkir API V2 Helper
+// ============================================
+
+/**
+ * Make a request to the Raja Ongkir V2 API
+ */
+async function rajaOngkirV2Fetch<T>(
+	endpoint: string,
+	options?: RequestInit,
+): Promise<T> {
 	const apiKey = env.RAJAONGKIR_API_KEY;
 	const baseUrl = env.RAJAONGKIR_BASE_URL;
 
@@ -41,104 +60,98 @@ async function rajaOngkirFetch(endpoint: string, options?: RequestInit) {
 		throw new Error(`Raja Ongkir API error: ${response.statusText}`);
 	}
 
-	const data = (await response.json()) as RajaOngkirResponse;
+	const data = (await response.json()) as RajaOngkirV2Response<T>;
 
-	if (data.rajaongkir?.status?.code !== 200) {
-		throw new Error(
-			data.rajaongkir?.status?.description || "Raja Ongkir API error",
-		);
+	if (data.meta?.code !== 200) {
+		throw new Error(data.meta?.message || "Raja Ongkir API error");
 	}
 
-	return data.rajaongkir.results;
+	return data.data;
 }
+
+// ============================================
+// Shipping Router - V2 Endpoints
+// ============================================
 
 export const shippingRouter = {
 	/**
-	 * Get all provinces
+	 * Search domestic destinations (autocomplete)
+	 * Returns destinations with subdistrict-level precision
 	 */
-	getProvinces: publicProcedure
-		.output(z.array(ProvinceSchema))
-		.handler(async () => {
-			const results = await rajaOngkirFetch("/province");
-			return results as z.infer<typeof ProvinceSchema>[];
-		}),
-
-	/**
-	 * Get cities by province ID
-	 */
-	getCities: publicProcedure
-		.input(z.object({ provinceId: z.string() }))
-		.output(z.array(CitySchema))
+	searchDestination: publicProcedure
+		.input(SearchDestinationSchema)
+		.output(z.array(DomesticDestinationSchema))
 		.handler(async ({ input }) => {
-			const results = await rajaOngkirFetch(
-				`/city?province=${input.provinceId}`,
-			);
-			return results as z.infer<typeof CitySchema>[];
-		}),
-
-	/**
-	 * Get all cities (no filter)
-	 */
-	getAllCities: publicProcedure
-		.output(z.array(CitySchema))
-		.handler(async () => {
-			const results = await rajaOngkirFetch("/city");
-			return results as z.infer<typeof CitySchema>[];
-		}),
-
-	/**
-	 * Get city by ID
-	 */
-	getCityById: publicProcedure
-		.input(z.object({ cityId: z.string() }))
-		.output(CitySchema.nullable())
-		.handler(async ({ input }) => {
-			const results = await rajaOngkirFetch(`/city?id=${input.cityId}`);
-			return (results as z.infer<typeof CitySchema>) || null;
-		}),
-
-	/**
-	 * Calculate shipping cost
-	 */
-	getCost: publicProcedure
-		.input(GetShippingCostSchema)
-		.output(z.array(ShippingCostResultSchema))
-		.handler(async ({ input }) => {
-			const apiKey = env.RAJAONGKIR_API_KEY;
-			const baseUrl = env.RAJAONGKIR_BASE_URL;
-
-			if (!apiKey) {
-				throw new Error("Raja Ongkir API key not configured");
-			}
-
-			const response = await fetch(`${baseUrl}/cost`, {
-				method: "POST",
-				headers: {
-					key: apiKey,
-					"Content-Type": "application/x-www-form-urlencoded",
-				},
-				body: new URLSearchParams({
-					origin: input.origin,
-					destination: input.destination,
-					weight: input.weight.toString(),
-					courier: input.courier,
-				}),
+			const params = new URLSearchParams({
+				search: input.search,
+				limit: input.limit?.toString() ?? "10",
+				offset: input.offset?.toString() ?? "0",
 			});
 
-			if (!response.ok) {
-				throw new Error(`Raja Ongkir API error: ${response.statusText}`);
+			const results = await rajaOngkirV2Fetch<DomesticDestination[]>(
+				`/destination/domestic-destination?${params.toString()}`,
+				{ headers: { method: "GET" } },
+			);
+
+			return results ?? [];
+		}),
+
+	/**
+	 * Calculate domestic shipping cost (V2)
+	 * Uses destination IDs (subdistrict level) for precise calculation
+	 */
+	calculateCost: publicProcedure
+		.input(CalculateDomesticCostSchema)
+		.output(z.array(ShippingCostResultV2Schema))
+		.handler(async ({ input }) => {
+			const bodyParams: Record<string, string> = {
+				origin: input.origin.toString(),
+				destination: input.destination.toString(),
+				weight: input.weight.toString(),
+				courier: input.courier,
+			};
+
+			if (input.price) {
+				bodyParams.price = input.price;
 			}
+			const results = await rajaOngkirV2Fetch<ShippingCostResultV2[]>(
+				"/calculate/domestic-cost",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
+					body: new URLSearchParams(bodyParams),
+				},
+			);
 
-			const data = (await response.json()) as RajaOngkirResponse;
+			return results ?? [];
+		}),
 
-			if (data.rajaongkir?.status?.code !== 200) {
-				throw new Error(
-					data.rajaongkir?.status?.description || "Raja Ongkir API error",
-				);
-			}
+	/**
+	 * Track waybill/AWB number
+	 * Get real-time shipment tracking information
+	 */
+	trackWaybill: publicProcedure
+		.input(TrackWaybillSchema)
+		.output(TrackingResultSchema.nullable())
+		.handler(async ({ input }) => {
+			const bodyParams: Record<string, string> = {
+				awb: input.awb,
+				courier: input.courier,
+			};
 
-			return data.rajaongkir.results as z.infer<
-				typeof ShippingCostResultSchema
-			>[];
+			const results = await rajaOngkirV2Fetch<TrackingResult | null>(
+				"/track/waybill",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
+					body: new URLSearchParams(bodyParams),
+				},
+			);
+
+			return results;
 		}),
 };
