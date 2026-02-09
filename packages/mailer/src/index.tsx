@@ -18,9 +18,17 @@ interface SendResetPasswordEmailProps {
 	expiresIn?: string;
 }
 
+interface SendPasswordResetConfirmationProps {
+	to: string;
+	name?: string;
+}
+
 interface Mailer {
 	send: (props: SendMailProps) => Promise<void>;
 	sendResetPasswordEmail: (props: SendResetPasswordEmailProps) => Promise<void>;
+	sendPasswordResetConfirmation: (
+		props: SendPasswordResetConfirmationProps,
+	) => Promise<void>;
 }
 
 function createMailer(): Mailer {
@@ -65,9 +73,24 @@ function createMailer(): Mailer {
 		});
 	}
 
+	async function sendPasswordResetConfirmation({
+		to,
+		name,
+	}: SendPasswordResetConfirmationProps) {
+		const greeting = name ? `Hi ${name}` : "Hi";
+
+		await send({
+			from: "[DEMO] Simple Commerce <demo-sc-notifications@info.zenta.dev>",
+			to: to,
+			subject: "Your Password Has Been Reset",
+			text: `${greeting},\n\nYour password has been successfully reset. If you did not make this change, please contact our support team immediately.\n\nBest regards,\nSimple Commerce Team`,
+		});
+	}
+
 	return {
 		send,
 		sendResetPasswordEmail,
+		sendPasswordResetConfirmation,
 	};
 }
 

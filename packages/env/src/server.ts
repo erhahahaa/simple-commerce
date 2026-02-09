@@ -23,11 +23,11 @@ export const env = createEnv({
 			.enum(["true", "false"])
 			.default("false")
 			.transform((val) => val === "true"),
-		// Raja Ongkir API (optional - for shipping cost calculation)
+		// Raja Ongkir API V2 (optional - for shipping cost calculation)
 		RAJAONGKIR_API_KEY: z.string().optional(),
 		RAJAONGKIR_BASE_URL: z
 			.string()
-			.default("https://api.rajaongkir.com/starter"),
+			.default("https://rajaongkir.komerce.id/api/v1"),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

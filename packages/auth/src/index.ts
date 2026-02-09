@@ -33,9 +33,11 @@ export const auth = betterAuth({
 				token,
 			});
 		},
-		onPasswordReset: async ({ user }, _request) => {
-			// your logic here
-			console.log(`Password for user ${user.email} has been reset.`);
+		onPasswordReset: async ({ user }) => {
+			void mailer.sendPasswordResetConfirmation({
+				to: user.email,
+				name: user.name ?? undefined,
+			});
 		},
 	},
 	advanced: {

@@ -37,7 +37,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 // Midtrans payment webhook endpoint
 // This endpoint receives payment notifications from Midtrans
-app.post("/api/webhooks/midtrans", async (c) => {
+app.post("/api/payments/webhook/midtrans", async (c) => {
 	try {
 		const notification = (await c.req.json()) as MidtransNotification;
 
@@ -104,9 +104,6 @@ app.post("/api/webhooks/midtrans", async (c) => {
 			.where(eq(order.id, existingOrder.id));
 
 		console.log("Order updated:", existingOrder.id, updateData);
-		// TODO: Update order in database when Order API is implemented
-		// This will be done in Phase 6 (Order API)
-		// For now, just log and acknowledge the notification
 
 		// Return 200 OK to Midtrans
 		return c.json({
@@ -285,6 +282,11 @@ app.get("/app/reset-password", (c) => {
 </html>`;
 
 	return c.html(html);
+});
+
+app.onError((err, c) => {
+	console.error("Unhandled error:", err);
+	return c.json({ error: "Internal server error" }, 500);
 });
 
 export default app;
