@@ -104,6 +104,9 @@ app.post("/api/webhooks/midtrans", async (c) => {
 			.where(eq(order.id, existingOrder.id));
 
 		console.log("Order updated:", existingOrder.id, updateData);
+		// TODO: Update order in database when Order API is implemented
+		// This will be done in Phase 6 (Order API)
+		// For now, just log and acknowledge the notification
 
 		// Return 200 OK to Midtrans
 		return c.json({
