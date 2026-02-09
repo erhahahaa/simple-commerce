@@ -10,12 +10,6 @@ import { AnimatedView, StyledView } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useGetSession } from "@/hooks/auth";
 
-// Theme-aware background colors to prevent flash during navigation
-const screenBackgroundColors = {
-	light: "#667eea", // purple matching auth gradient
-	dark: "#1a1a2e", // dark matching auth gradient
-};
-
 export default function AuthLayout() {
 	const insets = useSafeAreaInsets();
 	const session = useGetSession();
@@ -72,9 +66,7 @@ export default function AuthLayout() {
 							animation: "fade",
 							animationDuration: 200,
 							contentStyle: {
-								backgroundColor: isLight
-									? screenBackgroundColors.light
-									: screenBackgroundColors.dark,
+								backgroundColor: "transparent",
 							},
 						}}
 					>
