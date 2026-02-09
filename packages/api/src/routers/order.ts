@@ -14,6 +14,8 @@ import {
 	OrderListResponseSchema,
 	OrderSchema,
 	OrderWithItemsSchema,
+	SimulateStepInputSchema,
+	SimulateStepResponseSchema,
 	UpdateOrderStatusSchema,
 	UpdateShippingSchema,
 } from "@simple-commerce/schema";
@@ -491,5 +493,149 @@ export const orderRouter = {
 			}
 
 			return updated;
+		}),
+
+	/**
+	 * Simulate order progression (for testing/demo purposes)
+	 * Advances order through: processing -> shipped -> in_transit -> delivered
+	 * This simulates what would normally happen via admin dashboard
+	 */
+	simulateNextStep: protectedProcedure
+		.input(SimulateStepInputSchema)
+		.output(SimulateStepResponseSchema)
+		.handler(async ({ context, input }) => {
+			const userId = context.session.user.id;
+
+			// Get order with shipping info
+			const existing = await db.query.order.findFirst({
+				where: and(eq(order.id, input.orderId), eq(order.userId, userId)),
+				with: {
+					shippingInfo: true,
+				},
+			});
+
+			if (!existing) {
+				throw new Error("Order not found");
+			}
+
+			if (existing.paymentStatus !== "paid") {
+				throw new Error("Order must be paid before simulation");
+			}
+
+			if (existing.status === "cancelled") {
+				throw new Error("Cannot simulate cancelled order");
+			}
+
+			if (existing.status === "delivered") {
+				throw new Error("Order is already delivered");
+			}
+
+			const currentShippingStatus = existing.shippingInfo?.status ?? "pending";
+
+			// Validate step is valid for current state
+			const validTransitions: Record<string, string[]> = {
+				pending: ["shipped"],
+				processing: ["shipped"],
+				shipped: ["in_transit"],
+				in_transit: ["delivered"],
+			};
+
+			const allowedSteps = validTransitions[currentShippingStatus] ?? [];
+			if (!allowedSteps.includes(input.step)) {
+				throw new Error(
+					`Invalid step "${input.step}" for current shipping status "${currentShippingStatus}". ` +
+						`Allowed: ${allowedSteps.join(", ") || "none"}`,
+				);
+			}
+
+			let trackingNumber: string | null =
+				existing.shippingInfo?.trackingNumber ?? null;
+			let message = "";
+			let nextStep: "shipped" | "in_transit" | "delivered" | null = null;
+
+			// Execute the simulation step
+			if (input.step === "shipped") {
+				// Generate fake tracking number
+				const courier = existing.shippingInfo?.courier?.toUpperCase() ?? "JNE";
+				const timestamp = Date.now().toString().slice(-10);
+				const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+				trackingNumber = `${courier}${timestamp}${random}`;
+
+				// Update shipping info
+				await db
+					.update(shippingInfo)
+					.set({
+						status: "shipped",
+						trackingNumber,
+						shippedAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.where(eq(shippingInfo.orderId, input.orderId));
+
+				// Update order status
+				await db
+					.update(order)
+					.set({
+						status: "shipped",
+						updatedAt: new Date(),
+					})
+					.where(eq(order.id, input.orderId));
+
+				message = `Order shipped! Tracking number ${trackingNumber} has been generated. Package handed to ${courier} courier.`;
+				nextStep = "in_transit";
+			} else if (input.step === "in_transit") {
+				// Update shipping status to in_transit
+				await db
+					.update(shippingInfo)
+					.set({
+						status: "in_transit",
+						updatedAt: new Date(),
+					})
+					.where(eq(shippingInfo.orderId, input.orderId));
+
+				message =
+					"Package is now in transit. It's being delivered to your address by the courier.";
+				nextStep = "delivered";
+			} else if (input.step === "delivered") {
+				// Update shipping info
+				await db
+					.update(shippingInfo)
+					.set({
+						status: "delivered",
+						deliveredAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.where(eq(shippingInfo.orderId, input.orderId));
+
+				// Update order status
+				await db
+					.update(order)
+					.set({
+						status: "delivered",
+						updatedAt: new Date(),
+					})
+					.where(eq(order.id, input.orderId));
+
+				message =
+					"Order delivered successfully! The package has been received.";
+				nextStep = null;
+			}
+
+			// Get updated order/shipping status
+			const updatedOrder = await db.query.order.findFirst({
+				where: eq(order.id, input.orderId),
+				with: {
+					shippingInfo: true,
+				},
+			});
+
+			return {
+				success: true,
+				message,
+				trackingNumber,
+				orderStatus: updatedOrder?.status ?? "processing",
+				shippingStatus: updatedOrder?.shippingInfo?.status ?? "pending",
+				nextStep,
+			};
 		}),
 };
