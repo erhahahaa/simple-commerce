@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Redirect, Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
 import { Logo } from "@/components/logo";
@@ -17,6 +18,13 @@ const screenBackgroundColors = {
 export default function AppLayout() {
 	const { data: session, isLoading: sessionLoading } = useGetSession();
 	const { isLight } = useAppTheme();
+	const router = useRouter();
+
+	useEffect(() => {
+		if (!sessionLoading && (!session?.success || !session.data?.user)) {
+			router.replace("/(auth)/sign-in");
+		}
+	}, [sessionLoading, session, router]);
 
 	if (sessionLoading) {
 		const gradientColors = isLight
@@ -42,10 +50,6 @@ export default function AppLayout() {
 				</AnimatedView>
 			</View>
 		);
-	}
-
-	if (!session?.success || !session.data?.user) {
-		return <Redirect href="/(auth)/sign-in" />;
 	}
 
 	return (

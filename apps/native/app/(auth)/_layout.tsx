@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Redirect, Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,10 +13,17 @@ import { useGetSession } from "@/hooks/auth";
 
 export default function AuthLayout() {
 	const insets = useSafeAreaInsets();
-	const session = useGetSession();
+	const { data: session, isLoading: sessionLoading } = useGetSession();
 	const { isLight } = useAppTheme();
+	const router = useRouter();
 
-	if (session.isLoading) {
+	useEffect(() => {
+		if (!sessionLoading && (!session?.success || !session.data?.user)) {
+			router.replace("/(auth)/sign-in");
+		}
+	}, [sessionLoading, session, router]);
+
+	if (sessionLoading) {
 		const gradientColors = isLight
 			? (["#a8edea", "#fed6e3", "#ffecd2"] as const)
 			: (["#0f0f1a", "#1a1a2e", "#16213e"] as const);
@@ -39,10 +47,6 @@ export default function AuthLayout() {
 				</AnimatedView>
 			</View>
 		);
-	}
-
-	if (session.data?.success && session.data.data) {
-		return <Redirect href="/(app)/(tabs)" />;
 	}
 
 	return (
