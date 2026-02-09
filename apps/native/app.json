@@ -34,7 +34,15 @@
 			}
 		},
 		"ios": {
-			"bundleIdentifier": "com.simplecommerce.app"
+			"bundleIdentifier": "com.simplecommerce.app",
+			"infoPlist": {
+				"ITSAppUsesNonExemptEncryption": true
+			}
+		},
+		"extra": {
+			"eas": {
+				"projectId": "7ca0e79b-5e5b-44c5-80c3-a40e5dc87ad2"
+			}
 		}
 	}
 }
