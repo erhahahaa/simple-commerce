@@ -41,7 +41,7 @@ function ProfileItem({
 
 	return (
 		<StyledPressable
-			className="flex-row items-center px-4 py-4"
+			className="flex-row items-center px-4 py-2"
 			onPress={onPress}
 			disabled={isLoading}
 		>
