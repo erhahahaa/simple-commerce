@@ -151,3 +151,32 @@ export const CheckoutResponseSchema = z.object({
 });
 
 export type CheckoutResponse = z.infer<typeof CheckoutResponseSchema>;
+
+// Simulation step enum (for order simulation feature)
+export const SimulationStepSchema = z.enum([
+	"shipped",
+	"in_transit",
+	"delivered",
+]);
+
+export type SimulationStep = z.infer<typeof SimulationStepSchema>;
+
+// Simulate order step input
+export const SimulateStepInputSchema = z.object({
+	orderId: z.string(),
+	step: SimulationStepSchema,
+});
+
+export type SimulateStepInput = z.infer<typeof SimulateStepInputSchema>;
+
+// Simulate order step response
+export const SimulateStepResponseSchema = z.object({
+	success: z.boolean(),
+	message: z.string(),
+	trackingNumber: z.string().nullable(),
+	orderStatus: OrderStatusSchema,
+	shippingStatus: ShippingStatusSchema,
+	nextStep: SimulationStepSchema.nullable(),
+});
+
+export type SimulateStepResponse = z.infer<typeof SimulateStepResponseSchema>;
