@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Button, Input, Spinner } from "heroui-native";
+import { Input, Spinner } from "heroui-native";
 import { useCallback, useState } from "react";
 import {
 	FlatList,

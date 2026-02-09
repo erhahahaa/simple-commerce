@@ -84,7 +84,7 @@ function getPaymentStatusColor(status: PaymentStatus) {
 	}
 }
 
-function getShippingStatusColor(status: ShippingStatus) {
+function _getShippingStatusColor(status: ShippingStatus) {
 	switch (status) {
 		case "pending":
 			return { bg: "rgba(234, 179, 8, 0.1)", text: "#eab308" };

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Button, Spinner, useToast } from "heroui-native";
+import { Spinner, useToast } from "heroui-native";
 import { ScrollView, StyleSheet } from "react-native";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

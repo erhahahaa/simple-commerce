@@ -9,7 +9,7 @@ import { AnimatedView, StyledText, StyledView } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
 
 export default function PaymentFailedScreen() {
-	const { orderId } = useLocalSearchParams<{ orderId: string }>();
+	const { orderId: _orderId } = useLocalSearchParams<{ orderId: string }>();
 	const insets = useSafeAreaInsets();
 	const { isLight } = useAppTheme();
 
@@ -107,7 +107,7 @@ export default function PaymentFailedScreen() {
 							"Card declined by bank",
 							"Payment timeout",
 							"Network connection issues",
-						].map((reason, index) => (
+						].map((reason) => (
 							<StyledView key={reason} className="mb-2 flex-row items-center">
 								<StyledView
 									className="mr-3 h-1.5 w-1.5 rounded-full"

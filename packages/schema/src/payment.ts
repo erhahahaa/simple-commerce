@@ -1,26 +1,8 @@
 import { z } from "zod";
 
-// Payment status enum
-export const PaymentStatusSchema = z.enum([
-	"pending",
-	"paid",
-	"failed",
-	"expired",
-	"refunded",
-]);
-
-export type PaymentStatus = z.infer<typeof PaymentStatusSchema>;
-
-// Order status enum
-export const OrderStatusSchema = z.enum([
-	"pending",
-	"processing",
-	"shipped",
-	"delivered",
-	"cancelled",
-]);
-
-export type OrderStatus = z.infer<typeof OrderStatusSchema>;
+// Re-export status types from order.ts (canonical definitions are there)
+export type { OrderStatus, PaymentStatus } from "./order";
+export { OrderStatusSchema, PaymentStatusSchema } from "./order";
 
 // Transaction item schema
 export const TransactionItemSchema = z.object({

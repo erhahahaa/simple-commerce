@@ -69,7 +69,7 @@ export const orderRouter = {
 				offset: input.offset,
 				with: {
 					items: true,
-					shipping: true,
+					shippingInfo: true,
 				},
 			});
 
@@ -77,7 +77,7 @@ export const orderRouter = {
 				orders: orders.map((o) => ({
 					...o,
 					items: o.items ?? [],
-					shipping: o.shipping ?? null,
+					shipping: o.shippingInfo ?? null,
 				})),
 				total,
 				limit: input.limit,
@@ -98,7 +98,7 @@ export const orderRouter = {
 				where: and(eq(order.id, input.id), eq(order.userId, userId)),
 				with: {
 					items: true,
-					shipping: true,
+					shippingInfo: true,
 				},
 			});
 
@@ -107,7 +107,7 @@ export const orderRouter = {
 			return {
 				...result,
 				items: result.items ?? [],
-				shipping: result.shipping ?? null,
+				shipping: result.shippingInfo ?? null,
 			};
 		}),
 
@@ -127,7 +127,7 @@ export const orderRouter = {
 				),
 				with: {
 					items: true,
-					shipping: true,
+					shippingInfo: true,
 				},
 			});
 
@@ -136,7 +136,7 @@ export const orderRouter = {
 			return {
 				...result,
 				items: result.items ?? [],
-				shipping: result.shipping ?? null,
+				shipping: result.shippingInfo ?? null,
 			};
 		}),
 

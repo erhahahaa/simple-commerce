@@ -358,7 +358,7 @@ export default function CartScreen() {
 								<RefreshControl refreshing={isRefetching} onRefresh={refetch} />
 							}
 						>
-							{cartItems.map((item: CartItemType, index: number) => (
+							{cartItems.map((item: CartItemType) => (
 								<CartItemCard
 									key={item.id}
 									item={item}

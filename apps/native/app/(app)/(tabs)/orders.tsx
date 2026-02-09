@@ -79,7 +79,7 @@ function formatDate(date: Date) {
 	}).format(new Date(date));
 }
 
-function getStatusColor(status: OrderStatus, isLight: boolean) {
+function getStatusColor(status: OrderStatus, _isLight: boolean) {
 	switch (status) {
 		case "pending":
 			return { bg: "rgba(234, 179, 8, 0.1)", text: "#eab308" };
