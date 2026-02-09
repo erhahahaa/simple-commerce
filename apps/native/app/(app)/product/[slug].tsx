@@ -14,6 +14,7 @@ import {
 	StyledView,
 } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
+import { useAddToCart } from "@/hooks/cart";
 import { useProductBySlug } from "@/hooks/products";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -35,6 +36,7 @@ export default function ProductDetailScreen() {
 	const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
 	const { data: product, isLoading, error } = useProductBySlug(slug ?? "");
+	const addToCartMutation = useAddToCart();
 
 	const productData = product as {
 		id: string;
@@ -53,12 +55,26 @@ export default function ProductDetailScreen() {
 	const handleAddToCart = () => {
 		if (!productData) return;
 
-		// TODO: Implement add to cart functionality
-		toast.show({
-			variant: "success",
-			label: "Added to cart",
-			description: `${quantity} x ${productData.name}`,
-		});
+		addToCartMutation.mutate(
+			{ productId: productData.id, quantity },
+			{
+				onSuccess: () => {
+					toast.show({
+						variant: "success",
+						label: "Added to cart",
+						description: `${quantity} x ${productData.name}`,
+					});
+					setQuantity(1); // Reset quantity after adding
+				},
+				onError: (error) => {
+					toast.show({
+						variant: "danger",
+						label: "Failed to add to cart",
+						description: error.message,
+					});
+				},
+			},
+		);
 	};
 
 	const increaseQuantity = () => {
@@ -343,7 +359,7 @@ export default function ProductDetailScreen() {
 					{/* Add to Cart Button */}
 					<Button
 						className="flex-1"
-						isDisabled={isOutOfStock}
+						isDisabled={isOutOfStock || addToCartMutation.isPending}
 						onPress={handleAddToCart}
 					>
 						<Ionicons
@@ -353,7 +369,11 @@ export default function ProductDetailScreen() {
 							style={{ marginRight: 8 }}
 						/>
 						<Button.Label>
-							{isOutOfStock ? "Out of Stock" : "Add to Cart"}
+							{addToCartMutation.isPending
+								? "Adding..."
+								: isOutOfStock
+									? "Out of Stock"
+									: "Add to Cart"}
 						</Button.Label>
 					</Button>
 				</StyledView>
