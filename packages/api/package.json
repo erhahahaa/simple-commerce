@@ -18,7 +18,9 @@
 		"@simple-commerce/auth": "workspace:*",
 		"@simple-commerce/db": "workspace:*",
 		"@simple-commerce/env": "workspace:*",
+		"@simple-commerce/schema": "workspace:*",
 		"dotenv": "catalog:",
+		"drizzle-orm": "^0.45.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
