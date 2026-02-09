@@ -1,6 +1,7 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+import { cartRouter } from "./cart";
 import { categoryRouter } from "./category";
 import { productRouter } from "./product";
 
@@ -17,6 +18,7 @@ export const appRouter = {
 	// E-commerce routers
 	category: categoryRouter,
 	product: productRouter,
+	cart: cartRouter,
 };
 
 export type AppRouter = typeof appRouter;
