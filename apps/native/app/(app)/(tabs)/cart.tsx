@@ -288,16 +288,20 @@ export default function CartScreen() {
 	};
 
 	const handleCheckout = () => {
-		// TODO: Navigate to checkout screen
 		router.push("/(app)/checkout" as never);
 	};
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView className="flex-1" style={{ paddingTop: insets.top }}>
+			<StyledView
+				className="flex-1"
+				style={{
+					paddingTop: insets.top + 10,
+				}}
+			>
 				{/* Header */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="flex-row items-center justify-between px-5 pb-4"
 				>
 					<StyledText className="font-bold text-2xl text-foreground">
@@ -327,7 +331,7 @@ export default function CartScreen() {
 					</StyledView>
 				) : isEmpty ? (
 					<StyledView className="flex-1 items-center justify-center px-8">
-						<AnimatedView entering={FadeInUp.delay(200).springify()}>
+						<AnimatedView entering={FadeInUp.duration(200)}>
 							<Ionicons
 								name="cart-outline"
 								size={80}
@@ -372,10 +376,10 @@ export default function CartScreen() {
 
 						{/* Bottom Summary */}
 						<AnimatedView
-							entering={FadeInUp.delay(300).springify()}
+							entering={FadeInUp.duration(200)}
 							className="absolute right-0 bottom-0 left-0 px-5 pt-4"
 							style={{
-								paddingBottom: insets.bottom + 12,
+								paddingBottom: insets.bottom + 90,
 								backgroundColor: isLight
 									? "rgba(255,255,255,0.95)"
 									: "rgba(30,30,45,0.95)",

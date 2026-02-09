@@ -105,7 +105,9 @@ export default function PaymentScreen() {
 			<GradientBackground variant="app">
 				<StyledView
 					className="flex-1 items-center justify-center px-8"
-					style={{ paddingTop: insets.top }}
+					style={{
+						paddingTop: insets.top + 10,
+					}}
 				>
 					<Ionicons
 						name="alert-circle-outline"
@@ -128,10 +130,15 @@ export default function PaymentScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView className="flex-1" style={{ paddingTop: insets.top }}>
+			<StyledView
+				className="flex-1"
+				style={{
+					paddingTop: insets.top + 10,
+				}}
+			>
 				{/* Header */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="flex-row items-center justify-between px-5 pb-4"
 				>
 					<StyledView className="flex-row items-center">

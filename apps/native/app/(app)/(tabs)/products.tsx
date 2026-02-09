@@ -59,7 +59,7 @@ function ProductCard({
 
 	return (
 		<AnimatedPressable
-			entering={FadeInUp.delay(index * 50).springify()}
+			entering={FadeInUp.delay(index * 10).duration(200)}
 			className="m-1.5 flex-1 overflow-hidden rounded-2xl"
 			style={{
 				backgroundColor: isLight
@@ -190,12 +190,14 @@ export default function ProductsScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView className="flex-1" style={{ paddingTop: insets.top }}>
+			<StyledView
+				className="flex-1"
+				style={{
+					paddingTop: insets.top + 10,
+				}}
+			>
 				{/* Header */}
-				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
-					className="px-5 pb-4"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="px-5 pb-4">
 					<StyledText className="mb-4 font-bold text-2xl text-foreground">
 						Products
 					</StyledText>
@@ -236,10 +238,7 @@ export default function ProductsScreen() {
 				</AnimatedView>
 
 				{/* Categories */}
-				<AnimatedView
-					entering={FadeInDown.delay(200).springify()}
-					className="mb-4"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="mb-4">
 					<FlatList
 						data={[allCategory, ...categories]}
 						horizontal

@@ -2,21 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Href } from "expo-router";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Spinner } from "heroui-native";
-import { useEffect } from "react";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
 import { AnimatedView, StyledText, StyledView } from "@/components/uniwind";
+import { formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useOrderById } from "@/hooks/checkout";
-
-function formatPrice(price: number) {
-	return new Intl.NumberFormat("id-ID", {
-		style: "currency",
-		currency: "IDR",
-		minimumFractionDigits: 0,
-	}).format(price);
-}
 
 export default function PaymentSuccessScreen() {
 	const { orderId, status } = useLocalSearchParams<{
@@ -29,12 +21,6 @@ export default function PaymentSuccessScreen() {
 	const { data: order, isLoading } = useOrderById(orderId ?? "");
 
 	const isPending = status === "pending";
-
-	// Prevent going back to payment screen
-	useEffect(() => {
-		const unsubscribe = router.canGoBack() ? () => {} : () => {};
-		return unsubscribe;
-	}, []);
 
 	if (isLoading) {
 		return (
@@ -57,7 +43,7 @@ export default function PaymentSuccessScreen() {
 			>
 				{/* Success Icon */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="items-center"
 				>
 					<StyledView
@@ -82,7 +68,7 @@ export default function PaymentSuccessScreen() {
 
 				{/* Title */}
 				<AnimatedView
-					entering={FadeInUp.delay(200).springify()}
+					entering={FadeInUp.duration(200)}
 					className="mt-6 items-center"
 				>
 					<StyledText className="text-center font-bold text-2xl text-foreground">
@@ -97,10 +83,7 @@ export default function PaymentSuccessScreen() {
 
 				{/* Order Details */}
 				{order && (
-					<AnimatedView
-						entering={FadeInUp.delay(300).springify()}
-						className="mt-8"
-					>
+					<AnimatedView entering={FadeInUp.duration(200)} className="mt-8">
 						<StyledView
 							className="rounded-xl p-4"
 							style={{
@@ -130,14 +113,14 @@ export default function PaymentSuccessScreen() {
 							<StyledView className="mt-2 flex-row justify-between">
 								<StyledText className="text-muted">Subtotal</StyledText>
 								<StyledText className="font-medium text-foreground">
-									{formatPrice(order.subtotal)}
+									{formatCurrency(order.subtotal)}
 								</StyledText>
 							</StyledView>
 
 							<StyledView className="mt-2 flex-row justify-between">
 								<StyledText className="text-muted">Shipping</StyledText>
 								<StyledText className="font-medium text-foreground">
-									{formatPrice(order.shippingCost)}
+									{formatCurrency(order.shippingCost)}
 								</StyledText>
 							</StyledView>
 
@@ -159,7 +142,7 @@ export default function PaymentSuccessScreen() {
 									className="font-bold"
 									style={{ color: isLight ? "#667eea" : "#a855f7" }}
 								>
-									{formatPrice(order.totalAmount)}
+									{formatCurrency(order.totalAmount)}
 								</StyledText>
 							</StyledView>
 
@@ -190,7 +173,7 @@ export default function PaymentSuccessScreen() {
 
 				{/* Actions */}
 				<StyledView className="mt-auto">
-					<AnimatedView entering={FadeInUp.delay(400).springify()}>
+					<AnimatedView entering={FadeInUp.duration(200)}>
 						<Button
 							className="w-full"
 							size="lg"

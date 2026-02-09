@@ -35,7 +35,7 @@ export default function NotFoundScreen() {
 					</AnimatedView>
 
 					<AnimatedView
-						entering={FadeInUp.delay(200).springify()}
+						entering={FadeInUp.duration(200)}
 						className="items-center"
 					>
 						<StyledText className="mb-2 font-bold text-6xl text-white">
@@ -50,7 +50,7 @@ export default function NotFoundScreen() {
 						</StyledText>
 					</AnimatedView>
 
-					<AnimatedView entering={FadeInUp.delay(400).springify()}>
+					<AnimatedView entering={FadeInUp.duration(200)}>
 						<Link href="/" asChild>
 							<Button className="px-8">
 								<Ionicons

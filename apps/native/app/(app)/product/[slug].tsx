@@ -12,19 +12,13 @@ import {
 	StyledText,
 	StyledView,
 } from "@/components/uniwind";
+import { formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useAddToCart } from "@/hooks/cart";
 import { useProductBySlug } from "@/hooks/products";
+import { useIsInWishlist, useToggleWishlist } from "@/hooks/wishlist";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-function formatPrice(price: number) {
-	return new Intl.NumberFormat("id-ID", {
-		style: "currency",
-		currency: "IDR",
-		minimumFractionDigits: 0,
-	}).format(price);
-}
 
 export default function ProductDetailScreen() {
 	const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -36,6 +30,10 @@ export default function ProductDetailScreen() {
 
 	const { data: product, isLoading, error } = useProductBySlug(slug ?? "");
 	const addToCartMutation = useAddToCart();
+
+	// Wishlist hooks
+	const { data: isInWishlist } = useIsInWishlist(product?.id ?? "");
+	const toggleWishlistMutation = useToggleWishlist();
 
 	const productData = product as {
 		id: string;
@@ -76,6 +74,32 @@ export default function ProductDetailScreen() {
 		);
 	};
 
+	const handleToggleWishlist = () => {
+		if (!productData) return;
+
+		toggleWishlistMutation.mutate(
+			{ productId: productData.id },
+			{
+				onSuccess: (result) => {
+					toast.show({
+						variant: "success",
+						label: result.inWishlist
+							? "Added to wishlist"
+							: "Removed from wishlist",
+						description: productData.name,
+					});
+				},
+				onError: (error) => {
+					toast.show({
+						variant: "danger",
+						label: "Failed to update wishlist",
+						description: error.message,
+					});
+				},
+			},
+		);
+	};
+
 	const increaseQuantity = () => {
 		if (productData && quantity < productData.stock) {
 			setQuantity((prev) => prev + 1);
@@ -103,7 +127,7 @@ export default function ProductDetailScreen() {
 			<GradientBackground variant="app">
 				<StyledView
 					className="flex-1 items-center justify-center px-8"
-					style={{ paddingTop: insets.top }}
+					style={{ paddingTop: insets.top + 10 }}
 				>
 					<Ionicons
 						name="alert-circle-outline"
@@ -129,7 +153,7 @@ export default function ProductDetailScreen() {
 		<GradientBackground variant="app">
 			{/* Header */}
 			<AnimatedView
-				entering={FadeInDown.delay(100).springify()}
+				entering={FadeInDown.duration(200)}
 				className="absolute top-0 right-0 left-0 z-10 flex-row items-center justify-between px-4"
 				style={{ paddingTop: insets.top + 8 }}
 			>
@@ -155,11 +179,13 @@ export default function ProductDetailScreen() {
 							? "rgba(255,255,255,0.9)"
 							: "rgba(30,30,45,0.9)",
 					}}
+					onPress={handleToggleWishlist}
+					disabled={toggleWishlistMutation.isPending}
 				>
 					<Ionicons
-						name="heart-outline"
+						name={isInWishlist ? "heart" : "heart-outline"}
 						size={20}
-						color={isLight ? "#1a1a2e" : "#ffffff"}
+						color={isInWishlist ? "#ef4444" : isLight ? "#9ca3af" : "#6b7280"}
 					/>
 				</StyledPressable>
 			</AnimatedView>
@@ -169,7 +195,7 @@ export default function ProductDetailScreen() {
 				contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
 			>
 				{/* Product Image */}
-				<AnimatedView entering={FadeInUp.delay(100).springify()}>
+				<AnimatedView entering={FadeInUp.duration(200)}>
 					{currentImage ? (
 						<Image
 							source={{ uri: currentImage }}
@@ -219,10 +245,7 @@ export default function ProductDetailScreen() {
 				</AnimatedView>
 
 				{/* Product Info */}
-				<AnimatedView
-					entering={FadeInUp.delay(200).springify()}
-					className="mt-6 px-5"
-				>
+				<AnimatedView entering={FadeInUp.duration(200)} className="mt-6 px-5">
 					{/* Category */}
 					{productData.category && (
 						<StyledView
@@ -252,7 +275,7 @@ export default function ProductDetailScreen() {
 						className="mt-2 font-bold text-2xl"
 						style={{ color: isLight ? "#667eea" : "#a855f7" }}
 					>
-						{formatPrice(productData.price)}
+						{formatCurrency(productData.price)}
 					</StyledText>
 
 					{/* Stock Status */}
@@ -289,7 +312,7 @@ export default function ProductDetailScreen() {
 
 			{/* Bottom Action Bar */}
 			<AnimatedView
-				entering={FadeInUp.delay(300).springify()}
+				entering={FadeInUp.duration(200)}
 				className="absolute right-0 bottom-0 left-0 px-5 pt-4"
 				style={{
 					paddingBottom: insets.bottom + 12,

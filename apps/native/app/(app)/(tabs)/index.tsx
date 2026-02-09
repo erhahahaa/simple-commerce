@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Button, Spinner, useToast } from "heroui-native";
-import { ScrollView, StyleSheet } from "react-native";
+import { useToast } from "heroui-native";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { FadeInDown, FadeInRight, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
+import { Skeleton } from "@/components/skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
 	AnimatedPressable,
@@ -14,23 +16,25 @@ import {
 	StyledText,
 	StyledView,
 } from "@/components/uniwind";
+import { formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useGetSession, useSignOut } from "@/hooks/auth";
+import { useGetSession } from "@/hooks/auth";
+import { useCartCount } from "@/hooks/cart";
+import { useUserStats } from "@/hooks/user";
 
 type QuickActionProps = {
 	icon: keyof typeof Ionicons.glyphMap;
 	label: string;
 	color: string;
-	delay: number;
 	onPress?: () => void;
 };
 
-function QuickAction({ icon, label, color, delay, onPress }: QuickActionProps) {
+function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
 	const { isLight } = useAppTheme();
 
 	return (
 		<AnimatedPressable
-			entering={FadeInUp.delay(delay).springify()}
+			entering={FadeInUp.duration(200)}
 			className="flex-1 items-center rounded-2xl p-4"
 			style={{
 				backgroundColor: isLight
@@ -58,22 +62,14 @@ type StatCardProps = {
 	label: string;
 	trend?: string;
 	trendUp?: boolean;
-	delay: number;
 };
 
-function StatCard({
-	icon,
-	value,
-	label,
-	trend,
-	trendUp,
-	delay,
-}: StatCardProps) {
+function StatCard({ icon, value, label, trend, trendUp }: StatCardProps) {
 	const { isLight } = useAppTheme();
 
 	return (
 		<AnimatedView
-			entering={FadeInRight.delay(delay).springify()}
+			entering={FadeInRight.duration(200)}
 			className="flex-1 rounded-2xl p-4"
 			style={{
 				backgroundColor: isLight
@@ -116,12 +112,31 @@ function StatCard({
 	);
 }
 
+function StatCardSkeleton() {
+	const { isLight } = useAppTheme();
+
+	return (
+		<AnimatedView
+			entering={FadeInRight.duration(200)}
+			className="flex-1 rounded-2xl p-4"
+			style={{
+				backgroundColor: isLight
+					? "rgba(255,255,255,0.9)"
+					: "rgba(30,30,45,0.9)",
+			}}
+		>
+			<Skeleton width={20} height={20} borderRadius={10} />
+			<Skeleton width="60%" height={28} className="mt-2" />
+			<Skeleton width="40%" height={12} className="mt-2" />
+		</AnimatedView>
+	);
+}
+
 type FeatureCardProps = {
 	icon: keyof typeof Ionicons.glyphMap;
 	title: string;
 	description: string;
 	gradient: readonly [string, string];
-	delay: number;
 	onPress?: () => void;
 };
 
@@ -130,12 +145,11 @@ function FeatureCard({
 	title,
 	description,
 	gradient,
-	delay,
 	onPress,
 }: FeatureCardProps) {
 	return (
 		<AnimatedPressable
-			entering={FadeInUp.delay(delay).springify()}
+			entering={FadeInUp.duration(200)}
 			className="overflow-hidden rounded-2xl"
 			onPress={onPress}
 		>
@@ -172,23 +186,24 @@ export default function HomeScreen() {
 	const insets = useSafeAreaInsets();
 	const { toast } = useToast();
 	const { data: session } = useGetSession();
-	const signOut = useSignOut();
 	const { isLight } = useAppTheme();
+	const {
+		data: userStats,
+		isLoading: statsLoading,
+		refetch: refetchStats,
+	} = useUserStats();
+	const {
+		data: cartCount,
+		// isLoading: cartLoading,
+		refetch: refetchCart,
+	} = useCartCount();
+	const [refreshing, setRefreshing] = useState(false);
 
-	const handleSignOut = async () => {
-		if (signOut.isPending) return;
-		const result = await signOut.mutateAsync();
-
-		if (!result.success) {
-			toast.show({
-				variant: "danger",
-				label: "Sign out failed",
-				description: result.error,
-			});
-			return;
-		}
-		router.replace("/(auth)/sign-in");
-	};
+	const onRefresh = useCallback(async () => {
+		setRefreshing(true);
+		await Promise.all([refetchStats(), refetchCart()]);
+		setRefreshing(false);
+	}, [refetchStats, refetchCart]);
 
 	const user = session?.success ? session.data.user : null;
 	const firstName = user?.name?.split(" ")[0] || "there";
@@ -202,10 +217,13 @@ export default function HomeScreen() {
 					paddingHorizontal: 20,
 				}}
 				showsVerticalScrollIndicator={false}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+				}
 			>
 				{/* Header */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="mb-6 flex-row items-center justify-between"
 				>
 					<StyledView>
@@ -223,6 +241,13 @@ export default function HomeScreen() {
 									? "rgba(255,255,255,0.9)"
 									: "rgba(30,30,45,0.9)",
 							}}
+							onPress={() => {
+								toast.show({
+									variant: "default",
+									label: "Coming Soon",
+									description: "Notifications will be available soon",
+								});
+							}}
 						>
 							<Ionicons
 								name="notifications-outline"
@@ -238,6 +263,7 @@ export default function HomeScreen() {
 									? "rgba(255,255,255,0.9)"
 									: "rgba(30,30,45,0.9)",
 							}}
+							onPress={() => router.push("/(app)/(tabs)/profile")}
 						>
 							<LinearGradient
 								colors={["#667eea", "#764ba2"]}
@@ -252,29 +278,29 @@ export default function HomeScreen() {
 
 				{/* Stats Row */}
 				<StyledView className="mb-6 flex-row gap-3">
-					<StatCard
-						icon="wallet-outline"
-						value="$2,450"
-						label="Total Spent"
-						trend="12%"
-						trendUp
-						delay={200}
-					/>
-					<StatCard
-						icon="bag-outline"
-						value="23"
-						label="Orders"
-						trend="5%"
-						trendUp
-						delay={300}
-					/>
+					{statsLoading ? (
+						<>
+							<StatCardSkeleton />
+							<StatCardSkeleton />
+						</>
+					) : (
+						<>
+							<StatCard
+								icon="wallet-outline"
+								value={formatCurrency(userStats?.totalSpent ?? 0)}
+								label="Total Spent"
+							/>
+							<StatCard
+								icon="bag-outline"
+								value={String(userStats?.totalOrders ?? 0)}
+								label="Orders"
+							/>
+						</>
+					)}
 				</StyledView>
 
 				{/* Quick Actions */}
-				<AnimatedView
-					entering={FadeInDown.delay(350).springify()}
-					className="mb-6"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="mb-6">
 					<StyledText className="mb-3 font-bold text-foreground text-lg">
 						Quick Actions
 					</StyledText>
@@ -283,34 +309,31 @@ export default function HomeScreen() {
 							icon="search-outline"
 							label="Search"
 							color="#667eea"
-							delay={400}
+							onPress={() => router.push("/(app)/(tabs)/products")}
 						/>
 						<QuickAction
 							icon="cart-outline"
-							label="Cart"
+							label={`Cart${(cartCount?.count ?? 0) > 0 ? ` (${cartCount?.count})` : ""}`}
 							color="#f59e0b"
-							delay={450}
+							onPress={() => router.push("/(app)/(tabs)/cart")}
 						/>
 						<QuickAction
 							icon="heart-outline"
-							label="Wishlist"
+							label={`Wishlist${(userStats?.wishlistCount ?? 0) > 0 ? ` (${userStats?.wishlistCount})` : ""}`}
 							color="#ef4444"
-							delay={500}
+							onPress={() => router.push("/(app)/wishlist")}
 						/>
 						<QuickAction
 							icon="receipt-outline"
-							label="Orders"
+							label={`Orders${(userStats?.pendingOrders ?? 0) > 0 ? ` (${userStats?.pendingOrders})` : ""}`}
 							color="#22c55e"
-							delay={550}
+							onPress={() => router.push("/(app)/(tabs)/orders")}
 						/>
 					</StyledView>
 				</AnimatedView>
 
 				{/* Feature Cards */}
-				<AnimatedView
-					entering={FadeInDown.delay(500).springify()}
-					className="mb-4"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="mb-4">
 					<StyledText className="mb-3 font-bold text-foreground text-lg">
 						Explore
 					</StyledText>
@@ -322,95 +345,23 @@ export default function HomeScreen() {
 						title="Flash Sale"
 						description="Up to 50% off on selected items"
 						gradient={["#f59e0b", "#ef4444"]}
-						delay={600}
+						onPress={() => router.push("/(app)/(tabs)/products")}
 					/>
 					<FeatureCard
 						icon="gift"
 						title="Rewards"
-						description="You have 500 points to redeem"
+						description="Earn points with every purchase"
 						gradient={["#22c55e", "#10b981"]}
-						delay={700}
+						onPress={() => router.push("/(app)/(tabs)/orders")}
 					/>
 					<FeatureCard
 						icon="star"
 						title="New Arrivals"
 						description="Check out the latest products"
 						gradient={["#667eea", "#764ba2"]}
-						delay={800}
+						onPress={() => router.push("/(app)/(tabs)/products")}
 					/>
 				</StyledView>
-
-				{/* Account Section */}
-				<AnimatedView
-					entering={FadeInUp.delay(900).springify()}
-					className="mb-4 rounded-2xl p-4"
-					style={{
-						backgroundColor: isLight
-							? "rgba(255,255,255,0.9)"
-							: "rgba(30,30,45,0.9)",
-					}}
-				>
-					<StyledText className="mb-3 font-semibold text-muted text-sm">
-						Account Details
-					</StyledText>
-					<StyledView className="gap-3">
-						<StyledView className="flex-row items-center">
-							<Ionicons
-								name="person-outline"
-								size={18}
-								color={isLight ? "#6b7280" : "#9ca3af"}
-							/>
-							<StyledText className="ml-3 flex-1 text-foreground">
-								{user?.name}
-							</StyledText>
-						</StyledView>
-						<StyledView className="flex-row items-center">
-							<Ionicons
-								name="mail-outline"
-								size={18}
-								color={isLight ? "#6b7280" : "#9ca3af"}
-							/>
-							<StyledText className="ml-3 flex-1 text-foreground">
-								{user?.email}
-							</StyledText>
-						</StyledView>
-						<StyledView className="flex-row items-center">
-							<Ionicons
-								name={
-									user?.emailVerified ? "shield-checkmark" : "shield-outline"
-								}
-								size={18}
-								color={user?.emailVerified ? "#22c55e" : "#f59e0b"}
-							/>
-							<StyledText className="ml-3 flex-1 text-foreground">
-								{user?.emailVerified ? "Email verified" : "Email not verified"}
-							</StyledText>
-						</StyledView>
-					</StyledView>
-				</AnimatedView>
-
-				{/* Sign Out */}
-				<AnimatedView entering={FadeInUp.delay(1000).springify()}>
-					<Button
-						variant="outline"
-						onPress={handleSignOut}
-						isDisabled={signOut.isPending}
-					>
-						{signOut.isPending ? (
-							<Spinner size="sm" />
-						) : (
-							<>
-								<Ionicons
-									name="log-out-outline"
-									size={18}
-									color={isLight ? "#1a1a2e" : "#ffffff"}
-									style={{ marginRight: 8 }}
-								/>
-								<Button.Label>Sign Out</Button.Label>
-							</>
-						)}
-					</Button>
-				</AnimatedView>
 			</ScrollView>
 		</GradientBackground>
 	);

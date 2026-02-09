@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { DomesticDestination } from "@simple-commerce/schema";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Button, Input, Spinner, useToast } from "heroui-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,13 +15,18 @@ import {
 	StyledView,
 } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useCreateAddress } from "@/hooks/checkout";
-import { useProfile } from "@/hooks/user";
+import { useAddressById, useUpdateAddress } from "@/hooks/checkout";
 
-export default function NewAddressScreen() {
+export default function EditAddressScreen() {
+	const { id } = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
 	const { isLight } = useAppTheme();
 	const { toast } = useToast();
+
+	// Fetch existing address
+	const { data: existingAddress, isLoading: isLoadingAddress } = useAddressById(
+		id ?? "",
+	);
 
 	// Form state
 	const [label, setLabel] = useState("");
@@ -29,6 +34,7 @@ export default function NewAddressScreen() {
 	const [phone, setPhone] = useState("");
 	const [address, setAddress] = useState("");
 	const [isDefault, setIsDefault] = useState(false);
+	const [isInitialized, setIsInitialized] = useState(false);
 
 	// Location state (from destination search)
 	const [selectedDestination, setSelectedDestination] =
@@ -37,11 +43,34 @@ export default function NewAddressScreen() {
 	// Modal state
 	const [showDestinationSearch, setShowDestinationSearch] = useState(false);
 
-	// User profile for auto-population
-	const { data: profile } = useProfile();
-
 	// Mutation
-	const createMutation = useCreateAddress();
+	const updateMutation = useUpdateAddress();
+
+	// Initialize form with existing data
+	useEffect(() => {
+		if (existingAddress && !isInitialized) {
+			setLabel(existingAddress.label);
+			setRecipientName(existingAddress.recipientName);
+			setPhone(existingAddress.phone);
+			setAddress(existingAddress.address);
+			setIsDefault(existingAddress.isDefault);
+
+			// If address has V2 destinationId, construct a destination object
+			if (existingAddress.destinationId) {
+				setSelectedDestination({
+					id: existingAddress.destinationId,
+					label: `${existingAddress.subdistrictName ?? ""}, ${existingAddress.districtName ?? ""}, ${existingAddress.cityName ?? ""}, ${existingAddress.provinceName ?? ""}`,
+					province_name: existingAddress.provinceName ?? "",
+					city_name: existingAddress.cityName ?? "",
+					district_name: existingAddress.districtName ?? "",
+					subdistrict_name: existingAddress.subdistrictName ?? "",
+					zip_code: existingAddress.postalCode ?? "",
+				});
+			}
+
+			setIsInitialized(true);
+		}
+	}, [existingAddress, isInitialized]);
 
 	const canSubmit =
 		label.trim() &&
@@ -49,43 +78,46 @@ export default function NewAddressScreen() {
 		phone.trim() &&
 		selectedDestination &&
 		address.trim() &&
-		!createMutation.isPending;
+		!updateMutation.isPending;
 
 	const handleSubmit = () => {
-		if (!selectedDestination) return;
+		if (!selectedDestination || !id) return;
 
-		createMutation.mutate(
+		updateMutation.mutate(
 			{
-				label: label.trim(),
-				recipientName: recipientName.trim(),
-				phone: phone.trim(),
-				// V2 location fields
-				provinceId: "", // Legacy field - not used in V2
-				provinceName: selectedDestination.province_name,
-				cityId: "", // Legacy field - not used in V2
-				cityName: selectedDestination.city_name,
-				districtId: "", // We don't have separate IDs from the search endpoint
-				districtName: selectedDestination.district_name,
-				subdistrictId: "",
-				subdistrictName: selectedDestination.subdistrict_name,
-				destinationId: selectedDestination.id, // This is the key field for V2
-				postalCode: selectedDestination.zip_code,
-				address: address.trim(),
-				isDefault,
+				id,
+				data: {
+					label: label.trim(),
+					recipientName: recipientName.trim(),
+					phone: phone.trim(),
+					// V2 location fields
+					provinceId: "", // Legacy field - not used in V2
+					provinceName: selectedDestination.province_name,
+					cityId: "", // Legacy field - not used in V2
+					cityName: selectedDestination.city_name,
+					districtId: "",
+					districtName: selectedDestination.district_name,
+					subdistrictId: "",
+					subdistrictName: selectedDestination.subdistrict_name,
+					destinationId: selectedDestination.id,
+					postalCode: selectedDestination.zip_code,
+					address: address.trim(),
+					isDefault,
+				},
 			},
 			{
 				onSuccess: () => {
 					toast.show({
 						variant: "success",
-						label: "Address added",
-						description: "Your new address has been saved",
+						label: "Address updated",
+						description: "Your address has been updated successfully",
 					});
 					router.back();
 				},
 				onError: (error) => {
 					toast.show({
 						variant: "danger",
-						label: "Failed to add address",
+						label: "Failed to update address",
 						description: error.message,
 					});
 				},
@@ -97,17 +129,6 @@ export default function NewAddressScreen() {
 		setSelectedDestination(destination);
 	};
 
-	const handleUseMyInfo = () => {
-		if (profile?.name) {
-			setRecipientName(profile.name);
-		}
-		if (profile?.phone) {
-			setPhone(profile.phone);
-		}
-	};
-
-	const canUseMyInfo = !!(profile?.name || profile?.phone);
-
 	// Format selected destination for display
 	const getDestinationDisplay = () => {
 		if (!selectedDestination) return null;
@@ -118,6 +139,42 @@ export default function NewAddressScreen() {
 	};
 
 	const destinationDisplay = getDestinationDisplay();
+
+	// Check if this is a legacy address that needs updating
+	const needsLocationUpdate = existingAddress && !existingAddress.destinationId;
+
+	if (isLoadingAddress) {
+		return (
+			<GradientBackground variant="app">
+				<StyledView className="flex-1 items-center justify-center">
+					<Spinner size="lg" />
+				</StyledView>
+			</GradientBackground>
+		);
+	}
+
+	if (!existingAddress) {
+		return (
+			<GradientBackground variant="app">
+				<StyledView
+					className="flex-1 items-center justify-center px-8"
+					style={{ paddingTop: insets.top + 10 }}
+				>
+					<Ionicons
+						name="alert-circle-outline"
+						size={60}
+						color={isLight ? "#9ca3af" : "#6b7280"}
+					/>
+					<StyledText className="mt-4 text-center font-semibold text-foreground text-lg">
+						Address not found
+					</StyledText>
+					<Button className="mt-6" onPress={() => router.back()}>
+						<Button.Label>Go Back</Button.Label>
+					</Button>
+				</StyledView>
+			</GradientBackground>
+		);
+	}
 
 	return (
 		<GradientBackground variant="app">
@@ -148,7 +205,7 @@ export default function NewAddressScreen() {
 						/>
 					</StyledPressable>
 					<StyledText className="font-bold text-foreground text-xl">
-						Add New Address
+						Edit Address
 					</StyledText>
 				</AnimatedView>
 
@@ -158,6 +215,39 @@ export default function NewAddressScreen() {
 					contentContainerStyle={{ paddingBottom: 120 }}
 				>
 					<AnimatedView entering={FadeInUp.duration(200)}>
+						{/* Update Required Banner */}
+						{needsLocationUpdate && (
+							<StyledView
+								className="mb-4 rounded-xl p-4"
+								style={{
+									backgroundColor: isLight
+										? "rgba(245,158,11,0.1)"
+										: "rgba(245,158,11,0.2)",
+									borderWidth: 1,
+									borderColor: "rgba(245,158,11,0.3)",
+								}}
+							>
+								<StyledView className="flex-row items-center">
+									<Ionicons
+										name="information-circle-outline"
+										size={20}
+										color="#f59e0b"
+										style={{ marginRight: 8 }}
+									/>
+									<StyledText
+										className="flex-1 font-medium"
+										style={{ color: "#f59e0b" }}
+									>
+										Location Update Required
+									</StyledText>
+								</StyledView>
+								<StyledText className="mt-2 text-muted text-sm">
+									Please search and select your location to enable accurate
+									shipping cost calculation.
+								</StyledText>
+							</StyledView>
+						)}
+
 						{/* Label */}
 						<StyledView className="mb-4">
 							<StyledText className="mb-2 font-medium text-foreground">
@@ -169,33 +259,6 @@ export default function NewAddressScreen() {
 								onChangeText={setLabel}
 							/>
 						</StyledView>
-
-						{/* Use My Info Button */}
-						{canUseMyInfo && (
-							<TouchableOpacity onPress={handleUseMyInfo}>
-								<StyledView
-									className="mb-4 flex-row items-center justify-center rounded-xl py-3"
-									style={{
-										backgroundColor: isLight
-											? "rgba(102,126,234,0.1)"
-											: "rgba(168,85,247,0.1)",
-									}}
-								>
-									<Ionicons
-										name="person-outline"
-										size={18}
-										color={isLight ? "#667eea" : "#a855f7"}
-										style={{ marginRight: 8 }}
-									/>
-									<StyledText
-										className="font-medium"
-										style={{ color: isLight ? "#667eea" : "#a855f7" }}
-									>
-										Use my info
-									</StyledText>
-								</StyledView>
-							</TouchableOpacity>
-						)}
 
 						{/* Recipient Name */}
 						<StyledView className="mb-4">
@@ -224,9 +287,28 @@ export default function NewAddressScreen() {
 
 						{/* Location Search */}
 						<StyledView className="mb-4">
-							<StyledText className="mb-2 font-medium text-foreground">
-								Location *
-							</StyledText>
+							<StyledView className="mb-2 flex-row items-center">
+								<StyledText className="font-medium text-foreground">
+									Location *
+								</StyledText>
+								{needsLocationUpdate && !selectedDestination && (
+									<StyledView
+										className="ml-2 rounded-full px-2 py-0.5"
+										style={{
+											backgroundColor: isLight
+												? "rgba(239,68,68,0.1)"
+												: "rgba(239,68,68,0.2)",
+										}}
+									>
+										<StyledText
+											className="font-medium text-xs"
+											style={{ color: "#ef4444" }}
+										>
+											Required
+										</StyledText>
+									</StyledView>
+								)}
+							</StyledView>
 							<TouchableOpacity onPress={() => setShowDestinationSearch(true)}>
 								<StyledView
 									className="rounded-xl px-4 py-3"
@@ -239,9 +321,11 @@ export default function NewAddressScreen() {
 											? isLight
 												? "#667eea"
 												: "#a855f7"
-											: isLight
-												? "rgba(0,0,0,0.1)"
-												: "rgba(255,255,255,0.1)",
+											: needsLocationUpdate
+												? "#ef4444"
+												: isLight
+													? "rgba(0,0,0,0.1)"
+													: "rgba(255,255,255,0.1)",
 									}}
 								>
 									{destinationDisplay ? (
@@ -272,12 +356,22 @@ export default function NewAddressScreen() {
 												<Ionicons
 													name="search-outline"
 													size={18}
-													color={isLight ? "#9ca3af" : "#6b7280"}
+													color={
+														needsLocationUpdate
+															? "#ef4444"
+															: isLight
+																? "#9ca3af"
+																: "#6b7280"
+													}
 													style={{ marginRight: 8 }}
 												/>
 												<StyledText
 													style={{
-														color: isLight ? "#9ca3af" : "#6b7280",
+														color: needsLocationUpdate
+															? "#ef4444"
+															: isLight
+																? "#9ca3af"
+																: "#6b7280",
 													}}
 												>
 													Search city, district, or subdistrict
@@ -360,7 +454,7 @@ export default function NewAddressScreen() {
 						isDisabled={!canSubmit}
 						onPress={handleSubmit}
 					>
-						{createMutation.isPending ? (
+						{updateMutation.isPending ? (
 							<Spinner size="sm" color="white" />
 						) : (
 							<>
@@ -370,7 +464,7 @@ export default function NewAddressScreen() {
 									color="white"
 									style={{ marginRight: 8 }}
 								/>
-								<Button.Label>Save Address</Button.Label>
+								<Button.Label>Save Changes</Button.Label>
 							</>
 						)}
 					</Button>
@@ -383,7 +477,9 @@ export default function NewAddressScreen() {
 					onSelect={handleDestinationSelect}
 					onClose={() => setShowDestinationSearch(false)}
 					isLight={isLight}
-					initialSearch={selectedDestination?.city_name ?? ""}
+					initialSearch={
+						existingAddress?.cityName ?? selectedDestination?.city_name ?? ""
+					}
 				/>
 			)}
 		</GradientBackground>

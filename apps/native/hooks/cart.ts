@@ -1,5 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { orpc } from "@/utils/orpc";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { orpc, queryClient } from "@/utils/orpc";
+
+export const CART_KEYS = {
+	GET: orpc.cart.get.queryKey(),
+	COUNT: orpc.cart.count.queryKey(),
+} as const;
 
 /**
  * Get the current user's cart with all items
@@ -19,64 +24,55 @@ export function useCartCount() {
  * Add a product to the cart
  */
 export function useAddToCart() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: { productId: string; quantity?: number }) =>
-			orpc.cart.addItem.call({
-				productId: input.productId,
-				quantity: input.quantity ?? 1,
-			}),
-		onSuccess: () => {
-			// Invalidate cart queries to refetch updated data
-			queryClient.invalidateQueries({ queryKey: ["cart"] });
-		},
-	});
+	return useMutation(
+		orpc.cart.addItem.mutationOptions({
+			onSuccess: () => {
+				// Invalidate cart queries to refetch updated data
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.GET });
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.COUNT });
+			},
+		}),
+	);
 }
 
 /**
  * Update cart item quantity
  */
 export function useUpdateCartItem() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: { cartItemId: string; quantity: number }) =>
-			orpc.cart.updateItem.call({
-				cartItemId: input.cartItemId,
-				quantity: input.quantity,
-			}),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["cart"] });
-		},
-	});
+	return useMutation(
+		orpc.cart.updateItem.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.GET });
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.COUNT });
+			},
+		}),
+	);
 }
 
 /**
  * Remove an item from the cart
  */
 export function useRemoveFromCart() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: { cartItemId: string }) =>
-			orpc.cart.removeItem.call({ cartItemId: input.cartItemId }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["cart"] });
-		},
-	});
+	return useMutation(
+		orpc.cart.removeItem.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.GET });
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.COUNT });
+			},
+		}),
+	);
 }
 
 /**
  * Clear all items from the cart
  */
 export function useClearCart() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: () => orpc.cart.clear.call(),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["cart"] });
-		},
-	});
+	return useMutation(
+		orpc.cart.clear.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.GET });
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.COUNT });
+			},
+		}),
+	);
 }

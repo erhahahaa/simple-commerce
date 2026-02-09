@@ -16,6 +16,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/orpc";
 
+export const AUTH_KEYS = {
+	SESSION: ["session"],
+} as const;
+
 export function useSignIn() {
 	return useMutation({
 		mutationKey: ["sign-in"],

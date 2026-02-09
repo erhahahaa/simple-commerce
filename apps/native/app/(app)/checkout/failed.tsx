@@ -24,7 +24,7 @@ export default function PaymentFailedScreen() {
 			>
 				{/* Failed Icon */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="items-center"
 				>
 					<StyledView
@@ -41,7 +41,7 @@ export default function PaymentFailedScreen() {
 
 				{/* Title */}
 				<AnimatedView
-					entering={FadeInUp.delay(200).springify()}
+					entering={FadeInUp.duration(200)}
 					className="mt-6 items-center"
 				>
 					<StyledText className="text-center font-bold text-2xl text-foreground">
@@ -54,10 +54,7 @@ export default function PaymentFailedScreen() {
 				</AnimatedView>
 
 				{/* Info Card */}
-				<AnimatedView
-					entering={FadeInUp.delay(300).springify()}
-					className="mt-8"
-				>
+				<AnimatedView entering={FadeInUp.duration(200)} className="mt-8">
 					<StyledView
 						className="rounded-xl p-4"
 						style={{
@@ -87,10 +84,7 @@ export default function PaymentFailedScreen() {
 				</AnimatedView>
 
 				{/* Possible reasons */}
-				<AnimatedView
-					entering={FadeInUp.delay(400).springify()}
-					className="mt-4"
-				>
+				<AnimatedView entering={FadeInUp.duration(200)} className="mt-4">
 					<StyledView
 						className="rounded-xl p-4"
 						style={{
@@ -123,7 +117,7 @@ export default function PaymentFailedScreen() {
 
 				{/* Actions */}
 				<StyledView className="mt-auto">
-					<AnimatedView entering={FadeInUp.delay(500).springify()}>
+					<AnimatedView entering={FadeInUp.duration(200)}>
 						<Button
 							className="w-full"
 							size="lg"

@@ -37,28 +37,36 @@ export default function ForgotPassword() {
 
 	const onSubmit = async (data: ForgotPasswordRequest) => {
 		if (forgotPassword.isPending) return;
-		setForgotPasswordSuccess(true);
 
-		const result = await forgotPassword.mutateAsync({
-			email: data.email,
-		});
+		try {
+			const result = await forgotPassword.mutateAsync({
+				email: data.email,
+			});
 
-		if (!result.success) {
+			if (!result.success) {
+				toast.show({
+					variant: "danger",
+					label: "Forgot password failed",
+					description: result.error,
+				});
+				return;
+			}
+
+			setForgotPasswordSuccess(true);
+		} catch (error) {
+			console.error("Forgot password error:", error);
 			toast.show({
 				variant: "danger",
-				label: "Forgot password failed",
-				description: result.error,
+				label: "Request failed",
+				description: "Please check your connection and try again",
 			});
-			return;
 		}
-
-		setForgotPasswordSuccess(true);
 	};
 
 	return (
 		<AuthScreenWrapper>
 			<AnimatedView
-				entering={FadeInDown.delay(200).springify()}
+				entering={FadeInDown.duration(200)}
 				className="mb-6 items-center"
 			>
 				<StyledText className="font-bold text-2xl text-white">
@@ -109,7 +117,7 @@ export default function ForgotPassword() {
 
 			{forgotPasswordSuccess && (
 				<AnimatedView
-					entering={FadeInDown.delay(800).springify()}
+					entering={FadeInDown.duration(200)}
 					className="mt-6 items-center"
 				>
 					<StyledText className="text-center text-white/70">
@@ -120,7 +128,7 @@ export default function ForgotPassword() {
 			)}
 
 			<AnimatedView
-				entering={FadeInDown.delay(800).springify()}
+				entering={FadeInDown.duration(200)}
 				className="mt-6 items-center"
 			>
 				<StyledText className="text-white/70">

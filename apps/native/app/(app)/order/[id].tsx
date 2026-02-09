@@ -7,8 +7,14 @@ import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
 import { AnimatedView, StyledText, StyledView } from "@/components/uniwind";
+import { formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useCancelOrder, useOrderById } from "@/hooks/checkout";
+import {
+	type SimulationStep,
+	useCancelOrder,
+	useOrderById,
+	useSimulateOrder,
+} from "@/hooks/checkout";
 
 type OrderStatus =
 	| "pending"
@@ -24,14 +30,6 @@ type ShippingStatus =
 	| "in_transit"
 	| "delivered"
 	| "returned";
-
-function formatPrice(price: number) {
-	return new Intl.NumberFormat("id-ID", {
-		style: "currency",
-		currency: "IDR",
-		minimumFractionDigits: 0,
-	}).format(price);
-}
 
 function formatDate(date: Date) {
 	return new Intl.DateTimeFormat("id-ID", {
@@ -141,6 +139,83 @@ export default function OrderDetailScreen() {
 
 	const { data: order, isLoading, refetch } = useOrderById(id ?? "");
 	const cancelMutation = useCancelOrder();
+	const simulateMutation = useSimulateOrder();
+
+	// Get step title for toast and button
+	const getStepTitle = (step: SimulationStep): string => {
+		switch (step) {
+			case "shipped":
+				return "Ship Order";
+			case "in_transit":
+				return "In Transit";
+			case "delivered":
+				return "Deliver";
+			default:
+				return "Next Step";
+		}
+	};
+
+	// Get step description for toast
+	const getStepDescription = (step: SimulationStep): string => {
+		switch (step) {
+			case "shipped":
+				return "Tracking number generated. Package handed to courier.";
+			case "in_transit":
+				return "Package is being delivered to your address.";
+			case "delivered":
+				return "Your order has been delivered successfully!";
+			default:
+				return "Order status updated.";
+		}
+	};
+
+	// Determine the next simulation step based on current shipping status
+	const getNextSimulationStep = (): SimulationStep | null => {
+		if (!order) return null;
+		const shippingStatus = order.shipping?.status ?? "pending";
+		if (shippingStatus === "pending" || shippingStatus === "processing")
+			return "shipped";
+		if (shippingStatus === "shipped") return "in_transit";
+		if (shippingStatus === "in_transit") return "delivered";
+		return null; // Already delivered or returned
+	};
+
+	const nextStep = order ? getNextSimulationStep() : null;
+
+	// Simulate one step at a time
+	const handleSimulateNextStep = async () => {
+		if (!order || !nextStep || simulateMutation.isPending) return;
+
+		try {
+			// Call API to update order to the next step
+			const result = await simulateMutation.mutateAsync({
+				orderId: order.id,
+				step: nextStep,
+			});
+
+			// Refetch order data to update UI
+			await refetch();
+
+			// Show toast with explanation
+			toast.show({
+				label:
+					nextStep === "shipped"
+						? "Order Shipped"
+						: nextStep === "in_transit"
+							? "In Transit"
+							: "Order Delivered",
+				description: result.message || getStepDescription(nextStep),
+				variant: nextStep === "delivered" ? "success" : "default",
+			});
+		} catch (error) {
+			toast.show({
+				label: "Simulation Error",
+				description:
+					error instanceof Error ? error.message : "Failed to simulate step",
+				variant: "danger",
+			});
+		}
+	};
 
 	const handleBack = () => {
 		if (router.canGoBack()) {
@@ -215,7 +290,7 @@ export default function OrderDetailScreen() {
 			<GradientBackground variant="app">
 				<StyledView
 					className="flex-1 items-center justify-center"
-					style={{ paddingTop: insets.top }}
+					style={{ paddingTop: insets.top + 10 }}
 				>
 					<Spinner size="lg" />
 				</StyledView>
@@ -228,7 +303,7 @@ export default function OrderDetailScreen() {
 			<GradientBackground variant="app">
 				<StyledView
 					className="flex-1 items-center justify-center px-8"
-					style={{ paddingTop: insets.top }}
+					style={{ paddingTop: insets.top + 10 }}
 				>
 					<Ionicons
 						name="receipt-outline"
@@ -259,6 +334,11 @@ export default function OrderDetailScreen() {
 	const canTrack =
 		order.shipping?.trackingNumber &&
 		(order.status === "shipped" || order.shipping.status === "in_transit");
+	// Show simulate button when payment is complete but order not yet delivered/cancelled
+	const canSimulate =
+		order.paymentStatus === "paid" &&
+		order.status !== "delivered" &&
+		order.status !== "cancelled";
 
 	const currentShippingStep = order.shipping
 		? getShippingStepIndex(order.shipping.status as ShippingStatus)
@@ -266,10 +346,10 @@ export default function OrderDetailScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView className="flex-1" style={{ paddingTop: insets.top }}>
+			<StyledView className="flex-1" style={{ paddingTop: insets.top + 10 }}>
 				{/* Header */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="flex-row items-center px-5 pb-4"
 				>
 					<TouchableOpacity onPress={handleBack} className="mr-3">
@@ -322,7 +402,7 @@ export default function OrderDetailScreen() {
 				>
 					{/* Order Status Card */}
 					<AnimatedView
-						entering={FadeInUp.delay(150).springify()}
+						entering={FadeInUp.duration(200)}
 						className="mb-4 rounded-2xl p-4"
 						style={{ backgroundColor: cardBg }}
 					>
@@ -353,7 +433,7 @@ export default function OrderDetailScreen() {
 					{/* Shipping Timeline (if not cancelled) */}
 					{order.status !== "cancelled" && order.shipping && (
 						<AnimatedView
-							entering={FadeInUp.delay(200).springify()}
+							entering={FadeInUp.duration(200)}
 							className="mb-4 rounded-2xl p-4"
 							style={{ backgroundColor: cardBg }}
 						>
@@ -486,7 +566,7 @@ export default function OrderDetailScreen() {
 
 					{/* Order Items */}
 					<AnimatedView
-						entering={FadeInUp.delay(250).springify()}
+						entering={FadeInUp.duration(200)}
 						className="mb-4 rounded-2xl p-4"
 						style={{ backgroundColor: cardBg }}
 					>
@@ -528,11 +608,11 @@ export default function OrderDetailScreen() {
 										{item.productName}
 									</StyledText>
 									<StyledText className="text-muted text-sm">
-										{item.quantity} x {formatPrice(item.price)}
+										{item.quantity} x {formatCurrency(item.price)}
 									</StyledText>
 								</StyledView>
 								<StyledText className="font-semibold text-foreground">
-									{formatPrice(item.price * item.quantity)}
+									{formatCurrency(item.price * item.quantity)}
 								</StyledText>
 							</StyledView>
 						))}
@@ -540,7 +620,7 @@ export default function OrderDetailScreen() {
 
 					{/* Order Summary */}
 					<AnimatedView
-						entering={FadeInUp.delay(300).springify()}
+						entering={FadeInUp.duration(200)}
 						className="mb-4 rounded-2xl p-4"
 						style={{ backgroundColor: cardBg }}
 					>
@@ -550,13 +630,13 @@ export default function OrderDetailScreen() {
 						<StyledView className="flex-row justify-between py-2">
 							<StyledText className="text-muted">Subtotal</StyledText>
 							<StyledText className="text-foreground">
-								{formatPrice(order.subtotal)}
+								{formatCurrency(order.subtotal)}
 							</StyledText>
 						</StyledView>
 						<StyledView className="flex-row justify-between py-2">
 							<StyledText className="text-muted">Shipping</StyledText>
 							<StyledText className="text-foreground">
-								{formatPrice(order.shippingCost)}
+								{formatCurrency(order.shippingCost)}
 							</StyledText>
 						</StyledView>
 						<StyledView
@@ -570,14 +650,14 @@ export default function OrderDetailScreen() {
 								className="font-bold text-lg"
 								style={{ color: accentColor }}
 							>
-								{formatPrice(order.totalAmount)}
+								{formatCurrency(order.totalAmount)}
 							</StyledText>
 						</StyledView>
 					</AnimatedView>
 
 					{/* Payment Information */}
 					<AnimatedView
-						entering={FadeInUp.delay(350).springify()}
+						entering={FadeInUp.duration(200)}
 						className="mb-4 rounded-2xl p-4"
 						style={{ backgroundColor: cardBg }}
 					>
@@ -626,7 +706,7 @@ export default function OrderDetailScreen() {
 
 					{/* Order Timeline */}
 					<AnimatedView
-						entering={FadeInUp.delay(400).springify()}
+						entering={FadeInUp.duration(200)}
 						className="mb-4 rounded-2xl p-4"
 						style={{ backgroundColor: cardBg }}
 					>
@@ -741,9 +821,9 @@ export default function OrderDetailScreen() {
 				</ScrollView>
 
 				{/* Bottom Action Buttons */}
-				{(canPay || canCancel) && (
+				{(canPay || canCancel || canSimulate) && (
 					<AnimatedView
-						entering={FadeInUp.delay(450).springify()}
+						entering={FadeInUp.duration(200)}
 						className="absolute right-0 bottom-0 left-0 flex-row gap-3 px-5 pt-4"
 						style={{
 							paddingBottom: insets.bottom + 16,
@@ -771,6 +851,32 @@ export default function OrderDetailScreen() {
 						{canPay && (
 							<Button className="flex-1" onPress={handlePayNow}>
 								<Button.Label>Pay Now</Button.Label>
+							</Button>
+						)}
+						{canSimulate && nextStep && (
+							<Button
+								className="flex-1"
+								onPress={handleSimulateNextStep}
+								isDisabled={simulateMutation.isPending}
+								variant="outline"
+							>
+								{simulateMutation.isPending ? (
+									<StyledView className="flex-row items-center gap-2">
+										<Spinner size="sm" />
+										<Button.Label>Simulating...</Button.Label>
+									</StyledView>
+								) : (
+									<StyledView className="flex-row items-center gap-2">
+										<Ionicons
+											name="play-circle-outline"
+											size={18}
+											color={accentColor}
+										/>
+										<Button.Label>
+											Simulate: {getStepTitle(nextStep)}
+										</Button.Label>
+									</StyledView>
+								)}
 							</Button>
 						)}
 					</AnimatedView>

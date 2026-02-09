@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import type { Courier } from "@simple-commerce/schema";
 import type { Href } from "expo-router";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
@@ -13,23 +14,10 @@ import {
 	StyledText,
 	StyledView,
 } from "@/components/uniwind";
+import { config, formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useCart } from "@/hooks/cart";
 import { useAddresses, useCheckout, useShippingCost } from "@/hooks/checkout";
-
-// Store origin city ID (should be from env/config in production)
-const STORE_ORIGIN_CITY_ID = "501"; // Example: Yogyakarta
-
-// Default product weight in grams (should come from products in production)
-const DEFAULT_PRODUCT_WEIGHT = 500;
-
-function formatPrice(price: number) {
-	return new Intl.NumberFormat("id-ID", {
-		style: "currency",
-		currency: "IDR",
-		minimumFractionDigits: 0,
-	}).format(price);
-}
 
 type AddressType = {
 	id: string;
@@ -42,6 +30,10 @@ type AddressType = {
 	postalCode: string;
 	address: string;
 	isDefault: boolean;
+	// V2 fields
+	destinationId: number | null;
+	districtName: string | null;
+	subdistrictName: string | null;
 };
 
 type ShippingOption = {
@@ -53,10 +45,18 @@ type ShippingOption = {
 	etd: string;
 };
 
+// Courier display names
+const COURIER_NAMES: Record<Courier, string> = {
+	jne: "JNE",
+	sicepat: "SiCepat",
+	jnt: "J&T",
+};
+
 interface AddressCardProps {
 	address: AddressType;
 	isSelected: boolean;
 	onSelect: () => void;
+	onEdit: () => void;
 	isLight: boolean;
 }
 
@@ -64,8 +64,11 @@ function AddressCard({
 	address,
 	isSelected,
 	onSelect,
+	onEdit,
 	isLight,
 }: AddressCardProps) {
+	const needsUpdate = !address.destinationId;
+
 	return (
 		<TouchableOpacity onPress={onSelect} activeOpacity={0.7}>
 			<StyledView
@@ -85,7 +88,7 @@ function AddressCard({
 				}}
 			>
 				<StyledView className="flex-row items-center justify-between">
-					<StyledView className="flex-row items-center">
+					<StyledView className="flex-1 flex-row items-center">
 						<StyledText className="font-semibold text-foreground">
 							{address.label}
 						</StyledText>
@@ -106,28 +109,60 @@ function AddressCard({
 								</StyledText>
 							</StyledView>
 						)}
-					</StyledView>
-					<StyledView
-						className="h-5 w-5 items-center justify-center rounded-full"
-						style={{
-							borderWidth: 2,
-							borderColor: isSelected
-								? isLight
-									? "#667eea"
-									: "#a855f7"
-								: isLight
-									? "#d1d5db"
-									: "#4b5563",
-							backgroundColor: isSelected
-								? isLight
-									? "#667eea"
-									: "#a855f7"
-								: "transparent",
-						}}
-					>
-						{isSelected && (
-							<Ionicons name="checkmark" size={12} color="white" />
+						{needsUpdate && (
+							<StyledView
+								className="ml-2 rounded-full px-2 py-0.5"
+								style={{
+									backgroundColor: isLight
+										? "rgba(239,68,68,0.1)"
+										: "rgba(239,68,68,0.2)",
+								}}
+							>
+								<StyledText
+									className="font-medium text-xs"
+									style={{ color: "#ef4444" }}
+								>
+									Update Required
+								</StyledText>
+							</StyledView>
 						)}
+					</StyledView>
+					<StyledView className="flex-row items-center gap-2">
+						<TouchableOpacity
+							onPress={(e) => {
+								e.stopPropagation();
+								onEdit();
+							}}
+							hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+						>
+							<Ionicons
+								name="pencil-outline"
+								size={18}
+								color={isLight ? "#667eea" : "#a855f7"}
+							/>
+						</TouchableOpacity>
+						<StyledView
+							className="h-5 w-5 items-center justify-center rounded-full"
+							style={{
+								borderWidth: 2,
+								borderColor: isSelected
+									? isLight
+										? "#667eea"
+										: "#a855f7"
+									: isLight
+										? "#d1d5db"
+										: "#4b5563",
+								backgroundColor: isSelected
+									? isLight
+										? "#667eea"
+										: "#a855f7"
+									: "transparent",
+							}}
+						>
+							{isSelected && (
+								<Ionicons name="checkmark" size={12} color="white" />
+							)}
+						</StyledView>
 					</StyledView>
 				</StyledView>
 				<StyledText className="mt-2 font-medium text-foreground">
@@ -138,6 +173,8 @@ function AddressCard({
 					{address.address}
 				</StyledText>
 				<StyledText className="text-muted text-sm">
+					{address.subdistrictName && `${address.subdistrictName}, `}
+					{address.districtName && `${address.districtName}, `}
 					{address.cityName}, {address.provinceName} {address.postalCode}
 				</StyledText>
 			</StyledView>
@@ -194,7 +231,7 @@ function ShippingCard({
 						className="font-bold"
 						style={{ color: isLight ? "#667eea" : "#a855f7" }}
 					>
-						{formatPrice(option.cost)}
+						{formatCurrency(option.cost)}
 					</StyledText>
 					<StyledView
 						className="mt-2 h-5 w-5 items-center justify-center rounded-full"
@@ -234,9 +271,7 @@ export default function CheckoutScreen() {
 	);
 	const [selectedShipping, setSelectedShipping] =
 		useState<ShippingOption | null>(null);
-	const [selectedCourier, setSelectedCourier] = useState<
-		"jne" | "pos" | "tiki"
-	>("jne");
+	const [selectedCourier, setSelectedCourier] = useState<Courier>("jne");
 
 	// Get cart data
 	const { data: cartData, isLoading: cartLoading } = useCart();
@@ -256,43 +291,35 @@ export default function CheckoutScreen() {
 
 	const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
-	// Calculate total weight (in production, sum product weights)
-	const totalWeight = itemCount * DEFAULT_PRODUCT_WEIGHT;
+	// Check if selected address needs to be updated (no destinationId)
+	const addressNeedsUpdate = selectedAddress && !selectedAddress.destinationId;
 
-	// Get shipping costs
+	// Calculate total weight (in production, sum product weights)
+	const totalWeight = itemCount * config.checkout.defaultProductWeight;
+
+	// Get shipping costs using V2 API (destination IDs)
 	const { data: shippingData, isLoading: shippingLoading } = useShippingCost({
-		origin: STORE_ORIGIN_CITY_ID,
-		destination: selectedAddress?.cityId ?? "",
+		origin: config.checkout.storeOriginDestinationId,
+		destination: selectedAddress?.destinationId ?? 0,
 		weight: totalWeight,
 		courier: selectedCourier,
-		enabled: !!selectedAddress?.cityId,
+		enabled:
+			!!selectedAddress?.destinationId &&
+			config.checkout.storeOriginDestinationId > 0,
 	});
 
-	// Parse shipping options
+	// Parse shipping options (V2 format is flat, not nested)
 	const shippingOptions: ShippingOption[] = [];
 	if (shippingData && Array.isArray(shippingData)) {
-		for (const courier of shippingData) {
-			const courierData = courier as {
-				code: string;
-				name: string;
-				costs: Array<{
-					service: string;
-					description: string;
-					cost: Array<{ value: number; etd: string }>;
-				}>;
-			};
-			for (const service of courierData.costs) {
-				if (service.cost[0]) {
-					shippingOptions.push({
-						courier: courierData.code,
-						courierName: courierData.name,
-						service: service.service,
-						description: service.description,
-						cost: service.cost[0].value,
-						etd: service.cost[0].etd,
-					});
-				}
-			}
+		for (const item of shippingData) {
+			shippingOptions.push({
+				courier: item.code,
+				courierName: item.name,
+				service: item.service,
+				description: item.description,
+				cost: item.cost,
+				etd: item.etd,
+			});
 		}
 	}
 
@@ -306,7 +333,8 @@ export default function CheckoutScreen() {
 		selectedAddressId &&
 		selectedShipping &&
 		cartItems.length > 0 &&
-		!checkoutMutation.isPending;
+		!checkoutMutation.isPending &&
+		!addressNeedsUpdate;
 
 	const handleCheckout = () => {
 		if (!selectedAddressId || !selectedShipping) return;
@@ -364,7 +392,9 @@ export default function CheckoutScreen() {
 			<GradientBackground variant="app">
 				<StyledView
 					className="flex-1 items-center justify-center px-8"
-					style={{ paddingTop: insets.top }}
+					style={{
+						paddingTop: insets.top + 10,
+					}}
 				>
 					<Ionicons
 						name="cart-outline"
@@ -384,10 +414,10 @@ export default function CheckoutScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView className="flex-1" style={{ paddingTop: insets.top }}>
+			<StyledView className="flex-1" style={{ paddingTop: insets.top + 10 }}>
 				{/* Header */}
 				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
+					entering={FadeInDown.duration(200)}
 					className="flex-row items-center px-5 pb-4"
 				>
 					<StyledPressable
@@ -416,7 +446,7 @@ export default function CheckoutScreen() {
 					contentContainerStyle={{ paddingBottom: 200 }}
 				>
 					{/* Shipping Address Section */}
-					<AnimatedView entering={FadeInUp.delay(200).springify()}>
+					<AnimatedView entering={FadeInUp.duration(200)}>
 						<StyledView className="mb-2 flex-row items-center justify-between">
 							<StyledText className="font-semibold text-foreground text-lg">
 								Shipping Address
@@ -468,25 +498,107 @@ export default function CheckoutScreen() {
 										setSelectedAddressId(address.id);
 										setSelectedShipping(null); // Reset shipping when address changes
 									}}
+									onEdit={() =>
+										router.push(`/checkout/address/${address.id}/edit` as Href)
+									}
 									isLight={isLight}
 								/>
 							))
 						)}
 					</AnimatedView>
 
+					{/* Address Update Warning */}
+					{addressNeedsUpdate && (
+						<AnimatedView entering={FadeInUp.duration(200)} className="mt-4">
+							<StyledView
+								className="rounded-xl p-4"
+								style={{
+									backgroundColor: isLight
+										? "rgba(239,68,68,0.1)"
+										: "rgba(239,68,68,0.2)",
+									borderWidth: 1,
+									borderColor: "rgba(239,68,68,0.3)",
+								}}
+							>
+								<StyledView className="flex-row items-center">
+									<Ionicons
+										name="warning-outline"
+										size={20}
+										color="#ef4444"
+										style={{ marginRight: 8 }}
+									/>
+									<StyledText
+										className="flex-1 font-medium"
+										style={{ color: "#ef4444" }}
+									>
+										Address Update Required
+									</StyledText>
+								</StyledView>
+								<StyledText className="mt-2 text-muted text-sm">
+									This address needs to be updated with more precise location
+									data to calculate shipping costs accurately.
+								</StyledText>
+								<Button
+									className="mt-3"
+									size="sm"
+									variant="outline"
+									onPress={() =>
+										router.push(
+											`/checkout/address/${selectedAddressId}/edit` as Href,
+										)
+									}
+								>
+									<Button.Label>Update Address</Button.Label>
+								</Button>
+							</StyledView>
+						</AnimatedView>
+					)}
+
+					{/* Store Origin Warning */}
+					{config.checkout.storeOriginDestinationId === 0 && (
+						<AnimatedView entering={FadeInUp.duration(200)} className="mt-4">
+							<StyledView
+								className="rounded-xl p-4"
+								style={{
+									backgroundColor: isLight
+										? "rgba(245,158,11,0.1)"
+										: "rgba(245,158,11,0.2)",
+									borderWidth: 1,
+									borderColor: "rgba(245,158,11,0.3)",
+								}}
+							>
+								<StyledView className="flex-row items-center">
+									<Ionicons
+										name="alert-circle-outline"
+										size={20}
+										color="#f59e0b"
+										style={{ marginRight: 8 }}
+									/>
+									<StyledText
+										className="flex-1 font-medium"
+										style={{ color: "#f59e0b" }}
+									>
+										Store Origin Not Configured
+									</StyledText>
+								</StyledView>
+								<StyledText className="mt-2 text-muted text-sm">
+									The store origin destination ID needs to be configured to
+									calculate shipping costs.
+								</StyledText>
+							</StyledView>
+						</AnimatedView>
+					)}
+
 					{/* Shipping Method Section */}
-					{selectedAddress && (
-						<AnimatedView
-							entering={FadeInUp.delay(300).springify()}
-							className="mt-6"
-						>
+					{selectedAddress && !addressNeedsUpdate && (
+						<AnimatedView entering={FadeInUp.duration(200)} className="mt-6">
 							<StyledText className="mb-2 font-semibold text-foreground text-lg">
 								Shipping Method
 							</StyledText>
 
 							{/* Courier Selection */}
 							<StyledView className="mb-3 flex-row gap-2">
-								{(["jne", "pos", "tiki"] as const).map((courier) => (
+								{config.checkout.supportedCouriers.map((courier) => (
 									<TouchableOpacity
 										key={courier}
 										onPress={() => {
@@ -518,7 +630,7 @@ export default function CheckoutScreen() {
 																: "#d1d5db",
 												}}
 											>
-												{courier.toUpperCase()}
+												{COURIER_NAMES[courier]}
 											</StyledText>
 										</StyledView>
 									</TouchableOpacity>
@@ -563,10 +675,7 @@ export default function CheckoutScreen() {
 					)}
 
 					{/* Order Summary */}
-					<AnimatedView
-						entering={FadeInUp.delay(400).springify()}
-						className="mt-6"
-					>
+					<AnimatedView entering={FadeInUp.duration(200)} className="mt-6">
 						<StyledText className="mb-2 font-semibold text-foreground text-lg">
 							Order Summary
 						</StyledText>
@@ -583,14 +692,14 @@ export default function CheckoutScreen() {
 									Subtotal ({itemCount} items)
 								</StyledText>
 								<StyledText className="font-medium text-foreground">
-									{formatPrice(subtotal)}
+									{formatCurrency(subtotal)}
 								</StyledText>
 							</StyledView>
 							<StyledView className="mt-2 flex-row justify-between">
 								<StyledText className="text-muted">Shipping</StyledText>
 								<StyledText className="font-medium text-foreground">
 									{selectedShipping
-										? formatPrice(shippingCost)
+										? formatCurrency(shippingCost)
 										: "Select shipping"}
 								</StyledText>
 							</StyledView>
@@ -611,7 +720,7 @@ export default function CheckoutScreen() {
 									className="font-bold text-lg"
 									style={{ color: isLight ? "#667eea" : "#a855f7" }}
 								>
-									{formatPrice(totalAmount)}
+									{formatCurrency(totalAmount)}
 								</StyledText>
 							</StyledView>
 						</StyledView>
@@ -620,7 +729,7 @@ export default function CheckoutScreen() {
 
 				{/* Bottom Action */}
 				<AnimatedView
-					entering={FadeInUp.delay(500).springify()}
+					entering={FadeInUp.duration(200)}
 					className="absolute right-0 bottom-0 left-0 px-5 pt-4"
 					style={{
 						paddingBottom: insets.bottom + 12,
@@ -649,7 +758,7 @@ export default function CheckoutScreen() {
 									color="white"
 									style={{ marginRight: 8 }}
 								/>
-								<Button.Label>Pay {formatPrice(totalAmount)}</Button.Label>
+								<Button.Label>Pay {formatCurrency(totalAmount)}</Button.Label>
 							</>
 						)}
 					</Button>

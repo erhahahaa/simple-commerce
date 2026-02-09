@@ -8,6 +8,12 @@ import { AnimatedView, StyledView } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { authClient } from "@/lib/auth-client";
 
+// Theme-aware background colors to prevent flash during navigation
+const screenBackgroundColors = {
+	light: "#fef3e7", // warm cream matching app gradient
+	dark: "#0f0f1a", // dark matching app gradient
+};
+
 export default function AppLayout() {
 	const { data: session, isPending } = authClient.useSession();
 	const { isLight } = useAppTheme();
@@ -26,7 +32,7 @@ export default function AppLayout() {
 					style={StyleSheet.absoluteFill}
 				/>
 				<AnimatedView
-					entering={FadeIn.duration(500)}
+					entering={FadeIn.duration(300)}
 					className="flex-1 items-center justify-center"
 				>
 					<Logo />
@@ -47,6 +53,12 @@ export default function AppLayout() {
 			screenOptions={{
 				headerShown: false,
 				animation: "fade",
+				animationDuration: 200,
+				contentStyle: {
+					backgroundColor: isLight
+						? screenBackgroundColors.light
+						: screenBackgroundColors.dark,
+				},
 			}}
 		>
 			<Stack.Screen name="(tabs)" />

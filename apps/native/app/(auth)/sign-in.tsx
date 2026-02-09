@@ -49,34 +49,43 @@ export default function SignInScreen() {
 	const onSubmit = async (data: SignInRequest) => {
 		if (signIn.isPending) return;
 
-		const result = await signIn.mutateAsync({
-			email: data.email,
-			password: data.password,
-			rememberMe: data.rememberMe,
-		});
+		try {
+			const result = await signIn.mutateAsync({
+				email: data.email,
+				password: data.password,
+				rememberMe: data.rememberMe,
+			});
 
-		if (!result.success) {
+			if (!result.success) {
+				toast.show({
+					variant: "danger",
+					label: "Sign in failed",
+					description: result.error,
+				});
+				return;
+			}
+
+			toast.show({
+				variant: "success",
+				label: "Sign in successful",
+				description: result.message,
+			});
+			router.replace("/(app)/(tabs)");
+		} catch (error) {
+			console.error("Sign in error:", error);
 			toast.show({
 				variant: "danger",
 				label: "Sign in failed",
-				description: result.error,
+				description: "Please check your connection and try again",
 			});
-			return;
 		}
-
-		toast.show({
-			variant: "success",
-			label: "Sign in successful",
-			description: result.message,
-		});
-		router.replace("/(app)");
 	};
 
 	return (
 		<AuthScreenWrapper>
 			{/* Welcome Text */}
 			<AnimatedView
-				entering={FadeInDown.delay(200).springify()}
+				entering={FadeInDown.duration(200)}
 				className="mb-6 items-center"
 			>
 				<StyledText className="font-bold text-2xl text-white">
@@ -177,16 +186,13 @@ export default function SignInScreen() {
 			<SocialDivider />
 
 			{/* Social Login */}
-			<AnimatedView
-				entering={FadeInUp.delay(300).springify()}
-				className="mb-2 gap-3"
-			>
+			<AnimatedView entering={FadeInUp.duration(200)} className="mb-2 gap-3">
 				<GoogleSocialButton />
 			</AnimatedView>
 
 			{/* Sign Up Link */}
 			<AnimatedView
-				entering={FadeInUp.delay(500).springify()}
+				entering={FadeInUp.duration(200)}
 				className="mt-6 flex-row items-center justify-center"
 			>
 				<StyledText className="text-white/70">

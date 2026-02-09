@@ -1,5 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { orpc } from "@/utils/orpc";
+import type {
+	CalculateDomesticCost,
+	Courier,
+	OrderListQuery,
+	SimulationStep,
+} from "@simple-commerce/schema";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { orpc, queryClient } from "@/utils/orpc";
+import { CART_KEYS } from "./cart";
+
+const ADDRESS_KEYS = {
+	LIST: orpc.address.list.queryKey(),
+	GET_DEFAULT: orpc.address.getDefault.queryKey(),
+	GET_BY_ID: (id: string) => orpc.address.getById.queryKey({ input: { id } }),
+} as const;
 
 // ============================================
 // Address Hooks
@@ -34,120 +47,101 @@ export function useAddressById(id: string) {
  * Create a new address
  */
 export function useCreateAddress() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: {
-			label: string;
-			recipientName: string;
-			phone: string;
-			provinceId: string;
-			provinceName: string;
-			cityId: string;
-			cityName: string;
-			district?: string;
-			postalCode: string;
-			address: string;
-			isDefault?: boolean;
-		}) => orpc.address.create.call(input),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["address"] });
-		},
-	});
+	return useMutation(
+		orpc.address.create.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.LIST });
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.GET_DEFAULT });
+			},
+		}),
+	);
 }
 
 /**
  * Update an address
  */
 export function useUpdateAddress() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: {
-			id: string;
-			data: {
-				label?: string;
-				recipientName?: string;
-				phone?: string;
-				provinceId?: string;
-				provinceName?: string;
-				cityId?: string;
-				cityName?: string;
-				district?: string;
-				postalCode?: string;
-				address?: string;
-				isDefault?: boolean;
-			};
-		}) => orpc.address.update.call(input),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["address"] });
-		},
-	});
+	return useMutation(
+		orpc.address.update.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.LIST });
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.GET_DEFAULT });
+			},
+		}),
+	);
 }
 
 /**
  * Delete an address
  */
 export function useDeleteAddress() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: { id: string }) => orpc.address.delete.call(input),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["address"] });
-		},
-	});
+	return useMutation(
+		orpc.address.delete.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.LIST });
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.GET_DEFAULT });
+			},
+		}),
+	);
 }
 
 /**
  * Set address as default
  */
 export function useSetDefaultAddress() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: { id: string }) => orpc.address.setDefault.call(input),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["address"] });
-		},
-	});
-}
-
-// ============================================
-// Shipping Hooks
-// ============================================
-
-/**
- * Get all provinces
- */
-export function useProvinces() {
-	return useQuery(orpc.shipping.getProvinces.queryOptions());
-}
-
-/**
- * Get cities by province ID
- */
-export function useCities(provinceId: string | undefined) {
-	return useQuery({
-		...orpc.shipping.getCities.queryOptions({
-			input: { provinceId: provinceId ?? "" },
+	return useMutation(
+		orpc.address.setDefault.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.LIST });
+				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.GET_DEFAULT });
+			},
 		}),
-		enabled: !!provinceId,
+	);
+}
+
+const _SHIPPING_KEYS = {
+	SEARCH_DESTINATION: (search: string) =>
+		orpc.shipping.searchDestination.queryKey({ input: { search } }),
+	CALCULATE_COST: (params: CalculateDomesticCost) =>
+		orpc.shipping.calculateCost.queryKey({ input: params }),
+};
+
+// ============================================
+// Shipping Hooks (V2 API)
+// ============================================
+
+/**
+ * Search destinations (autocomplete)
+ * Returns destinations with subdistrict-level precision
+ */
+export function useSearchDestination(
+	search: string,
+	options?: { enabled?: boolean; limit?: number },
+) {
+	return useQuery({
+		...orpc.shipping.searchDestination.queryOptions({
+			input: {
+				search,
+				limit: options?.limit ?? 10,
+				offset: 0,
+			},
+		}),
+		enabled: (options?.enabled ?? true) && search.length >= 3,
 	});
 }
 
 /**
- * Get shipping cost
+ * Calculate shipping cost (V2)
+ * Uses destination IDs (subdistrict level) for precise calculation
  */
-export function useShippingCost(options: {
-	origin: string;
-	destination: string;
-	weight: number;
-	courier: "jne" | "pos" | "tiki";
-	enabled?: boolean;
-}) {
+export function useShippingCost(
+	options: Omit<CalculateDomesticCost, "courier"> & {
+		courier: Courier;
+		enabled?: boolean;
+	},
+) {
 	return useQuery({
-		...orpc.shipping.getCost.queryOptions({
+		...orpc.shipping.calculateCost.queryOptions({
 			input: {
 				origin: options.origin,
 				destination: options.destination,
@@ -157,11 +151,31 @@ export function useShippingCost(options: {
 		}),
 		enabled:
 			options.enabled !== false &&
-			!!options.origin &&
-			!!options.destination &&
+			options.origin > 0 &&
+			options.destination > 0 &&
 			options.weight > 0,
 	});
 }
+
+/**
+ * Track waybill/AWB
+ */
+export function useTrackWaybill(awb: string, courier: Courier) {
+	return useQuery({
+		...orpc.shipping.trackWaybill.queryOptions({
+			input: { awb, courier },
+		}),
+		enabled: !!awb && !!courier,
+	});
+}
+
+const ORDER_KEYS = {
+	LIST: (query?: OrderListQuery) =>
+		orpc.order.list.queryKey({ input: query ?? {} }),
+	GET_BY_ID: (id: string) => orpc.order.getById.queryKey({ input: { id } }),
+	GET_BY_MIDTRANS_ID: (midtransOrderId: string) =>
+		orpc.order.getByMidtransId.queryKey({ input: { midtransOrderId } }),
+};
 
 // ============================================
 // Order Hooks
@@ -171,43 +185,22 @@ export function useShippingCost(options: {
  * Checkout - Create order from cart
  */
 export function useCheckout() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: {
-			addressId: string;
-			courier: string;
-			service: string;
-			shippingCost: number;
-			estimatedDays?: number;
-		}) => orpc.order.checkout.call(input),
-		onSuccess: () => {
-			// Clear cart cache since it's now empty
-			queryClient.invalidateQueries({ queryKey: ["cart"] });
-			queryClient.invalidateQueries({ queryKey: ["order"] });
-		},
-	});
+	return useMutation(
+		orpc.order.checkout.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.GET });
+				queryClient.invalidateQueries({ queryKey: CART_KEYS.COUNT });
+				queryClient.invalidateQueries({ queryKey: ORDER_KEYS.LIST() });
+			},
+		}),
+	);
 }
 
 /**
  * Get user's orders
  */
-export function useOrders(options?: {
-	status?: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-	paymentStatus?: "pending" | "paid" | "failed" | "expired" | "refunded";
-	limit?: number;
-	offset?: number;
-}) {
-	return useQuery(
-		orpc.order.list.queryOptions({
-			input: {
-				status: options?.status,
-				paymentStatus: options?.paymentStatus,
-				limit: options?.limit ?? 20,
-				offset: options?.offset ?? 0,
-			},
-		}),
-	);
+export function useOrders(options?: Partial<OrderListQuery>) {
+	return useQuery(orpc.order.list.queryOptions({ input: options ?? {} }));
 }
 
 /**
@@ -236,12 +229,32 @@ export function useOrderByMidtransId(midtransOrderId: string) {
  * Cancel order
  */
 export function useCancelOrder() {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (input: { orderId: string }) => orpc.order.cancel.call(input),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["order"] });
-		},
-	});
+	return useMutation(
+		orpc.order.cancel.mutationOptions({
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ORDER_KEYS.LIST() });
+			},
+		}),
+	);
 }
+
+/**
+ * Simulate order step (for testing/demo purposes)
+ * Advances order through: processing -> shipped -> in_transit -> delivered
+ */
+export function useSimulateOrder() {
+	return useMutation(
+		orpc.order.simulateNextStep.mutationOptions({
+			onSuccess: (_data, variables) => {
+				// Invalidate specific order and list
+				queryClient.invalidateQueries({
+					queryKey: ORDER_KEYS.GET_BY_ID(variables.orderId),
+				});
+				queryClient.invalidateQueries({ queryKey: ORDER_KEYS.LIST() });
+			},
+		}),
+	);
+}
+
+// Helper type for simulation steps
+export type { SimulationStep };

@@ -310,22 +310,21 @@ export default function OrdersScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView className="flex-1" style={{ paddingTop: insets.top }}>
+			<StyledView
+				className="flex-1"
+				style={{
+					paddingTop: insets.top + 10,
+				}}
+			>
 				{/* Header */}
-				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
-					className="px-5 pb-4"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="px-5 pb-4">
 					<StyledText className="font-bold text-2xl text-foreground">
 						My Orders
 					</StyledText>
 				</AnimatedView>
 
 				{/* Status Tabs */}
-				<AnimatedView
-					entering={FadeInDown.delay(200).springify()}
-					className="mb-4"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="mb-4">
 					<ScrollView
 						horizontal
 						showsHorizontalScrollIndicator={false}
@@ -374,7 +373,7 @@ export default function OrdersScreen() {
 					</StyledView>
 				) : isEmpty ? (
 					<StyledView className="flex-1 items-center justify-center px-8">
-						<AnimatedView entering={FadeInUp.delay(200).springify()}>
+						<AnimatedView entering={FadeInUp.duration(200)}>
 							<Ionicons
 								name="receipt-outline"
 								size={80}

@@ -50,34 +50,43 @@ export default function ResetPasswordPage() {
 	const onSubmit = async (data: ResetPasswordRequest) => {
 		if (resetPassword.isPending) return;
 
-		const result = await resetPassword.mutateAsync({
-			token: data.token,
-			newPassword: data.newPassword,
-			confirmNewPassword: data.confirmNewPassword,
-		});
+		try {
+			const result = await resetPassword.mutateAsync({
+				token: data.token,
+				newPassword: data.newPassword,
+				confirmNewPassword: data.confirmNewPassword,
+			});
 
-		if (!result.success) {
+			if (!result.success) {
+				toast.show({
+					variant: "danger",
+					label: "Reset password failed",
+					description: result.error,
+				});
+				return;
+			}
+
+			toast.show({
+				variant: "success",
+				label: "Reset password successful",
+				description: "You can now sign in with your new password.",
+			});
+
+			router.replace("/(auth)/sign-in");
+		} catch (error) {
+			console.error("Reset password error:", error);
 			toast.show({
 				variant: "danger",
 				label: "Reset password failed",
-				description: result.error,
+				description: "Please check your connection and try again",
 			});
-			return;
 		}
-
-		toast.show({
-			variant: "success",
-			label: "Reset password successful",
-			description: "You can now sign in with your new password.",
-		});
-
-		router.replace("/(auth)/sign-in");
 	};
 
 	return (
 		<AuthScreenWrapper>
 			<AnimatedView
-				entering={FadeInDown.delay(200).springify()}
+				entering={FadeInDown.duration(200)}
 				className="mb-6 items-center"
 			>
 				<StyledText className="font-bold text-2xl text-white">
@@ -184,7 +193,7 @@ export default function ResetPasswordPage() {
 						{resetPassword.isPending ? (
 							<Spinner color="white" />
 						) : (
-							"Reset Password"
+							<Button.Label>Reset Password</Button.Label>
 						)}
 					</Button>
 				</StyledView>

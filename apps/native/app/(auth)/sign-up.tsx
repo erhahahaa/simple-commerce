@@ -4,6 +4,7 @@ import {
 	type SignUpRequest,
 	SignUpRequestSchema,
 } from "@simple-commerce/schema/auth";
+import * as Linking from "expo-linking";
 import { Link, router } from "expo-router";
 import {
 	Button,
@@ -28,6 +29,7 @@ import {
 	StyledText,
 	StyledView,
 } from "@/components/uniwind";
+import { config } from "@/config";
 import { useSignUp } from "@/hooks/auth";
 import { passwordRequirements, validatePassword } from "@/utils/password";
 
@@ -57,30 +59,41 @@ export default function SignUpScreen() {
 	}, [password]);
 
 	const onSubmit = async (data: SignUpRequest) => {
-		const result = await signUp.mutateAsync(data);
+		if (signUp.isPending) return;
 
-		if (!result.success) {
+		try {
+			const result = await signUp.mutateAsync(data);
+
+			if (!result.success) {
+				toast.show({
+					variant: "danger",
+					label: "Sign up failed",
+					description: result.error,
+				});
+				return;
+			}
+
+			toast.show({
+				variant: "success",
+				label: "Sign up successful",
+				description: result.message,
+			});
+			router.replace("/(app)/(tabs)");
+		} catch (error) {
+			console.error("Sign up error:", error);
 			toast.show({
 				variant: "danger",
 				label: "Sign up failed",
-				description: result.error,
+				description: "Please check your connection and try again",
 			});
-			return;
 		}
-
-		toast.show({
-			variant: "success",
-			label: "Sign up successful",
-			description: result.message,
-		});
-		router.replace("/(app)" as never);
 	};
 
 	return (
 		<AuthScreenWrapper>
 			{/* Welcome Text */}
 			<AnimatedView
-				entering={FadeInDown.delay(200).springify()}
+				entering={FadeInDown.duration(200)}
 				className="mb-4 items-center"
 			>
 				<StyledText className="font-bold text-2xl text-white">
@@ -237,16 +250,13 @@ export default function SignUpScreen() {
 			<SocialDivider />
 
 			{/* Social Login */}
-			<AnimatedView
-				entering={FadeInUp.delay(300).springify()}
-				className="mb-2 gap-3"
-			>
+			<AnimatedView entering={FadeInUp.duration(200)} className="mb-2 gap-3">
 				<GoogleSocialButton />
 			</AnimatedView>
 
 			{/* Sign In Link */}
 			<AnimatedView
-				entering={FadeInUp.delay(500).springify()}
+				entering={FadeInUp.duration(200)}
 				className="mt-6 flex-row items-center justify-center"
 			>
 				<StyledText className="text-white/70">
@@ -260,17 +270,20 @@ export default function SignUpScreen() {
 			</AnimatedView>
 
 			{/* Terms */}
-			<AnimatedView
-				entering={FadeInUp.delay(600).springify()}
-				className="mt-4 px-4"
-			>
+			<AnimatedView entering={FadeInUp.duration(200)} className="mt-4 px-4">
 				<StyledText className="text-center text-white/50 text-xs">
 					By creating an account, you agree to our{" "}
-					<StyledText className="text-white/70 underline">
+					<StyledText
+						className="text-white/70 underline"
+						onPress={() => Linking.openURL(config.urls.termsOfService)}
+					>
 						Terms of Service
 					</StyledText>{" "}
 					and{" "}
-					<StyledText className="text-white/70 underline">
+					<StyledText
+						className="text-white/70 underline"
+						onPress={() => Linking.openURL(config.urls.privacyPolicy)}
+					>
 						Privacy Policy
 					</StyledText>
 				</StyledText>
