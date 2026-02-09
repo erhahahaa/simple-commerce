@@ -5,6 +5,11 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@simple-commerce/api/context";
 import { appRouter } from "@simple-commerce/api/routers/index";
+import {
+	type MidtransNotification,
+	mapTransactionStatus,
+	verifyNotificationSignature,
+} from "@simple-commerce/api/services/midtrans";
 import { auth } from "@simple-commerce/auth";
 import { env } from "@simple-commerce/env/server";
 import { Hono } from "hono";
@@ -25,6 +30,49 @@ app.use(
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+// Midtrans payment webhook endpoint
+// This endpoint receives payment notifications from Midtrans
+app.post("/api/webhooks/midtrans", async (c) => {
+	try {
+		const notification = (await c.req.json()) as MidtransNotification;
+
+		console.log("Received Midtrans notification:", {
+			orderId: notification.order_id,
+			transactionStatus: notification.transaction_status,
+			paymentType: notification.payment_type,
+		});
+
+		// Verify signature
+		const isValid = verifyNotificationSignature(notification);
+		if (!isValid) {
+			console.error("Invalid Midtrans notification signature");
+			return c.json({ error: "Invalid signature" }, 403);
+		}
+
+		// Map transaction status to our payment status
+		const paymentStatus = mapTransactionStatus(
+			notification.transaction_status,
+			notification.fraud_status,
+		);
+
+		console.log("Mapped payment status:", paymentStatus);
+
+		// TODO: Update order in database when Order API is implemented
+		// This will be done in Phase 6 (Order API)
+		// For now, just log and acknowledge the notification
+
+		// Return 200 OK to Midtrans
+		return c.json({
+			success: true,
+			orderId: notification.order_id,
+			paymentStatus,
+		});
+	} catch (error) {
+		console.error("Midtrans webhook error:", error);
+		return c.json({ error: "Internal server error" }, 500);
+	}
+});
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
