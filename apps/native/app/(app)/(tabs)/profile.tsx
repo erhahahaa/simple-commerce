@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { Spinner, useToast } from "heroui-native";
-import { ScrollView, StyleSheet } from "react-native";
+import { Alert, ScrollView, StyleSheet } from "react-native";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
+import { Skeleton, SkeletonAvatar } from "@/components/skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
 	AnimatedView,
@@ -13,8 +15,10 @@ import {
 	StyledText,
 	StyledView,
 } from "@/components/uniwind";
+import { config } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useGetSession, useSignOut } from "@/hooks/auth";
+import { useProfile } from "@/hooks/user";
 
 type ProfileItemProps = {
 	icon: keyof typeof Ionicons.glyphMap;
@@ -64,7 +68,9 @@ function ProfileItem({
 			<StyledView className="flex-1">
 				<StyledText
 					className="font-medium"
-					style={{ color: danger ? "#ef4444" : undefined }}
+					style={{
+						color: danger ? "#ef4444" : isLight ? "#111827" : "#f3f4f6",
+					}}
 				>
 					{label}
 				</StyledText>
@@ -87,9 +93,11 @@ export default function ProfileScreen() {
 	const insets = useSafeAreaInsets();
 	const { isLight } = useAppTheme();
 	const { toast } = useToast();
-	const { data: session } = useGetSession();
+	const { data: session, isLoading: sessionLoading } = useGetSession();
+	const { data: profile, isLoading: profileLoading } = useProfile();
 	const signOut = useSignOut();
 
+	const isLoading = sessionLoading || profileLoading;
 	const user = session?.success ? session.data.user : null;
 
 	const handleSignOut = async () => {
@@ -107,6 +115,22 @@ export default function ProfileScreen() {
 		router.replace("/(auth)/sign-in");
 	};
 
+	const handleOpenLink = (url: string, title: string) => {
+		Alert.alert(title, "This would open external link in production.", [
+			{ text: "Cancel", style: "cancel" },
+			{ text: "Open", onPress: () => Linking.openURL(url) },
+		]);
+	};
+
+	// NOTE: hide for now (not planned)
+	// const handlePaymentMethods = () => {
+	// 	toast.show({
+	// 		variant: "default",
+	// 		label: "Coming Soon",
+	// 		description: "Payment methods management will be available soon",
+	// 	});
+	// };
+
 	return (
 		<GradientBackground variant="app">
 			<ScrollView
@@ -117,10 +141,7 @@ export default function ProfileScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				{/* Header */}
-				<AnimatedView
-					entering={FadeInDown.delay(100).springify()}
-					className="px-5 pb-6"
-				>
+				<AnimatedView entering={FadeInDown.duration(200)} className="px-5 pb-6">
 					<StyledView className="mb-6 flex-row items-center justify-between">
 						<StyledText className="font-bold text-2xl text-foreground">
 							Profile
@@ -137,50 +158,66 @@ export default function ProfileScreen() {
 								: "rgba(30,30,45,0.95)",
 						}}
 					>
-						<StyledView className="flex-row items-center">
-							<StyledView className="h-16 w-16 items-center justify-center overflow-hidden rounded-full">
-								<LinearGradient
-									colors={["#667eea", "#764ba2"]}
-									style={StyleSheet.absoluteFill}
-								/>
-								<StyledText className="font-bold text-2xl text-white">
-									{user?.name?.charAt(0).toUpperCase() || "U"}
-								</StyledText>
-							</StyledView>
-							<StyledView className="ml-4 flex-1">
-								<StyledText className="font-bold text-foreground text-lg">
-									{user?.name || "User"}
-								</StyledText>
-								<StyledText className="mt-1 text-muted text-sm">
-									{user?.email}
-								</StyledText>
-								<StyledView className="mt-2 flex-row items-center">
-									<Ionicons
-										name={
-											user?.emailVerified
-												? "shield-checkmark"
-												: "shield-outline"
-										}
-										size={14}
-										color={user?.emailVerified ? "#22c55e" : "#f59e0b"}
-									/>
-									<StyledText
-										className="ml-1 text-xs"
-										style={{
-											color: user?.emailVerified ? "#22c55e" : "#f59e0b",
-										}}
-									>
-										{user?.emailVerified ? "Verified" : "Not verified"}
-									</StyledText>
+						{isLoading ? (
+							<StyledView className="flex-row items-center">
+								<SkeletonAvatar size={64} />
+								<StyledView className="ml-4 flex-1">
+									<Skeleton width="60%" height={20} />
+									<Skeleton width="80%" height={14} className="mt-2" />
+									<Skeleton width="40%" height={12} className="mt-2" />
 								</StyledView>
 							</StyledView>
-						</StyledView>
+						) : (
+							<StyledView className="flex-row items-center">
+								<StyledView className="h-16 w-16 items-center justify-center overflow-hidden rounded-full">
+									<LinearGradient
+										colors={["#667eea", "#764ba2"]}
+										style={StyleSheet.absoluteFill}
+									/>
+									<StyledText className="font-bold text-2xl text-white">
+										{user?.name?.charAt(0).toUpperCase() || "U"}
+									</StyledText>
+								</StyledView>
+								<StyledView className="ml-4 flex-1">
+									<StyledText className="font-bold text-foreground text-lg">
+										{user?.name || "User"}
+									</StyledText>
+									<StyledText className="mt-1 text-muted text-sm">
+										{user?.email}
+									</StyledText>
+									{profile?.phone && (
+										<StyledText className="mt-0.5 text-muted text-sm">
+											{profile.phone}
+										</StyledText>
+									)}
+									<StyledView className="mt-2 flex-row items-center">
+										<Ionicons
+											name={
+												user?.emailVerified
+													? "shield-checkmark"
+													: "shield-outline"
+											}
+											size={14}
+											color={user?.emailVerified ? "#22c55e" : "#f59e0b"}
+										/>
+										<StyledText
+											className="ml-1 text-xs"
+											style={{
+												color: user?.emailVerified ? "#22c55e" : "#f59e0b",
+											}}
+										>
+											{user?.emailVerified ? "Verified" : "Not verified"}
+										</StyledText>
+									</StyledView>
+								</StyledView>
+							</StyledView>
+						)}
 					</StyledView>
 				</AnimatedView>
 
 				{/* Settings Section */}
 				<AnimatedView
-					entering={FadeInUp.delay(200).springify()}
+					entering={FadeInUp.duration(200)}
 					className="mx-5 overflow-hidden rounded-2xl"
 					style={{
 						backgroundColor: isLight
@@ -194,22 +231,28 @@ export default function ProfileScreen() {
 					<ProfileItem
 						icon="person-outline"
 						label="Edit Profile"
-						onPress={() => {}}
+						onPress={() => router.push("/(app)/profile/edit")}
 					/>
 					<ProfileItem
 						icon="location-outline"
 						label="Addresses"
-						onPress={() => {}}
+						onPress={() => router.push("/(app)/profile/addresses")}
 					/>
-					<ProfileItem
+					{/* NOTE: hide for now (not planned) */}
+					{/* <ProfileItem
 						icon="card-outline"
 						label="Payment Methods"
-						onPress={() => {}}
+						onPress={handlePaymentMethods}
+					/> */}
+					<ProfileItem
+						icon="heart-outline"
+						label="Wishlist"
+						onPress={() => router.push("/(app)/wishlist")}
 					/>
 				</AnimatedView>
 
 				<AnimatedView
-					entering={FadeInUp.delay(300).springify()}
+					entering={FadeInUp.duration(200)}
 					className="mx-5 mt-4 overflow-hidden rounded-2xl"
 					style={{
 						backgroundColor: isLight
@@ -223,22 +266,28 @@ export default function ProfileScreen() {
 					<ProfileItem
 						icon="help-circle-outline"
 						label="Help Center"
-						onPress={() => {}}
+						onPress={() =>
+							handleOpenLink(config.urls.helpCenter, "Help Center")
+						}
 					/>
 					<ProfileItem
 						icon="chatbubble-outline"
 						label="Contact Us"
-						onPress={() => {}}
+						onPress={() =>
+							handleOpenLink(config.urls.supportEmail, "Contact Us")
+						}
 					/>
 					<ProfileItem
 						icon="document-text-outline"
 						label="Terms & Privacy"
-						onPress={() => {}}
+						onPress={() =>
+							handleOpenLink(config.urls.termsOfService, "Terms & Privacy")
+						}
 					/>
 				</AnimatedView>
 
 				<AnimatedView
-					entering={FadeInUp.delay(400).springify()}
+					entering={FadeInUp.duration(200)}
 					className="mx-5 mt-4 overflow-hidden rounded-2xl"
 					style={{
 						backgroundColor: isLight
