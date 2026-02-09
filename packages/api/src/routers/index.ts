@@ -8,6 +8,8 @@ import { orderRouter } from "./order";
 import { paymentRouter } from "./payment";
 import { productRouter } from "./product";
 import { shippingRouter } from "./shipping";
+import { userRouter } from "./user";
+import { wishlistRouter } from "./wishlist";
 
 export const appRouter = {
 	healthCheck: publicProcedure.handler(() => {
@@ -19,6 +21,8 @@ export const appRouter = {
 			user: context.session?.user,
 		};
 	}),
+	// User profile router
+	user: userRouter,
 	// E-commerce routers
 	order: orderRouter,
 	// Payment router
@@ -29,6 +33,7 @@ export const appRouter = {
 	cart: cartRouter,
 	address: addressRouter,
 	shipping: shippingRouter,
+	wishlist: wishlistRouter,
 };
 
 export type AppRouter = typeof appRouter;
