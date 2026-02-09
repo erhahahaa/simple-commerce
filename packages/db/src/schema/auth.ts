@@ -73,6 +73,8 @@ export const verification = pgTable(
 	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+// Note: Extended user relations (carts, addresses, orders) are in relations.ts
+// to avoid circular imports. Base auth relations are kept here.
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
 	accounts: many(account),
