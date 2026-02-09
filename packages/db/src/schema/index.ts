@@ -10,3 +10,4 @@ export * from "./product";
 // Relations (must be imported after all tables)
 export * from "./relations";
 export * from "./shipping";
+export * from "./wishlist";

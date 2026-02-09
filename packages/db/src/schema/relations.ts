@@ -7,6 +7,7 @@ import { category } from "./category";
 import { order, orderItem } from "./order";
 import { product } from "./product";
 import { shippingInfo } from "./shipping";
+import { wishlist } from "./wishlist";
 
 // ============================================
 // Category Relations
@@ -27,6 +28,7 @@ export const productRelations = relations(product, ({ one, many }) => ({
 	}),
 	cartItems: many(cartItem),
 	orderItems: many(orderItem),
+	wishlistItems: many(wishlist),
 }));
 
 // ============================================
@@ -100,5 +102,20 @@ export const shippingInfoRelations = relations(shippingInfo, ({ one }) => ({
 	order: one(order, {
 		fields: [shippingInfo.orderId],
 		references: [order.id],
+	}),
+}));
+
+// ============================================
+// Wishlist Relations
+// ============================================
+
+export const wishlistRelations = relations(wishlist, ({ one }) => ({
+	user: one(user, {
+		fields: [wishlist.userId],
+		references: [user.id],
+	}),
+	product: one(product, {
+		fields: [wishlist.productId],
+		references: [product.id],
 	}),
 }));
