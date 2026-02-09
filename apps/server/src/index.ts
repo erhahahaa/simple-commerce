@@ -6,12 +6,16 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@simple-commerce/api/context";
 import { appRouter } from "@simple-commerce/api/routers/index";
 import {
+	isTransactionSuccess,
 	type MidtransNotification,
 	mapTransactionStatus,
 	verifyNotificationSignature,
 } from "@simple-commerce/api/services/midtrans";
 import { auth } from "@simple-commerce/auth";
+import { db } from "@simple-commerce/db";
+import { order } from "@simple-commerce/db/schema";
 import { env } from "@simple-commerce/env/server";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -58,6 +62,48 @@ app.post("/api/webhooks/midtrans", async (c) => {
 
 		console.log("Mapped payment status:", paymentStatus);
 
+		// Find and update order
+		const existingOrder = await db.query.order.findFirst({
+			where: eq(order.midtransOrderId, notification.order_id),
+		});
+
+		if (!existingOrder) {
+			console.error(
+				"Order not found for Midtrans order ID:",
+				notification.order_id,
+			);
+			return c.json({ error: "Order not found" }, 404);
+		}
+
+		// Update order payment status
+		const updateData: Record<string, unknown> = {
+			paymentStatus,
+			paymentMethod: notification.payment_type,
+			updatedAt: new Date(),
+		};
+
+		// If payment successful, update status and paidAt
+		if (
+			isTransactionSuccess(
+				notification.transaction_status,
+				notification.fraud_status,
+			)
+		) {
+			updateData.status = "processing";
+			updateData.paidAt = new Date();
+		}
+
+		// If payment failed/expired, update status
+		if (paymentStatus === "failed" || paymentStatus === "expired") {
+			updateData.status = "cancelled";
+		}
+
+		await db
+			.update(order)
+			.set(updateData)
+			.where(eq(order.id, existingOrder.id));
+
+		console.log("Order updated:", existingOrder.id, updateData);
 		// TODO: Update order in database when Order API is implemented
 		// This will be done in Phase 6 (Order API)
 		// For now, just log and acknowledge the notification

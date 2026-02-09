@@ -1,6 +1,7 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+import { orderRouter } from "./order";
 import { paymentRouter } from "./payment";
 import { addressRouter } from "./address";
 import { cartRouter } from "./cart";
@@ -18,6 +19,8 @@ export const appRouter = {
 			user: context.session?.user,
 		};
 	}),
+	// E-commerce routers
+	order: orderRouter,
 	// Payment router
 	payment: paymentRouter,
 	// E-commerce routers
