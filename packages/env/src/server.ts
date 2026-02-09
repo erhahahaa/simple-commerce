@@ -16,6 +16,11 @@ export const env = createEnv({
 		RESEND_API_KEY: z.string().min(1),
 		// Optional: Expo Go URL for development deep links (e.g., "exp://192.168.1.100:8081")
 		EXPO_GO_URL: z.string().optional(),
+		// Raja Ongkir API (optional - for shipping cost calculation)
+		RAJAONGKIR_API_KEY: z.string().optional(),
+		RAJAONGKIR_BASE_URL: z
+			.string()
+			.default("https://api.rajaongkir.com/starter"),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
