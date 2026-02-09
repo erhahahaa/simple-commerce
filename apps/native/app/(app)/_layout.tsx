@@ -49,7 +49,13 @@ export default function AppLayout() {
 				animation: "fade",
 			}}
 		>
-			<Stack.Screen name="index" />
+			<Stack.Screen name="(tabs)" />
+			<Stack.Screen
+				name="product/[slug]"
+				options={{
+					animation: "slide_from_right",
+				}}
+			/>
 		</Stack>
 	);
 }
