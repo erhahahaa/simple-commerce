@@ -3,7 +3,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useToast } from "heroui-native";
 import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { RefreshControl, StyleSheet } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInRight, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -210,7 +211,7 @@ export default function HomeScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<ScrollView
+			<KeyboardAwareScrollView
 				contentContainerStyle={{
 					paddingTop: insets.top + 10,
 					paddingBottom: insets.bottom + 20,
@@ -220,6 +221,7 @@ export default function HomeScreen() {
 				refreshControl={
 					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 				}
+				bottomOffset={20}
 			>
 				{/* Header */}
 				<AnimatedView
@@ -362,7 +364,7 @@ export default function HomeScreen() {
 						onPress={() => router.push("/(app)/(tabs)/products")}
 					/>
 				</StyledView>
-			</ScrollView>
+			</KeyboardAwareScrollView>
 		</GradientBackground>
 	);
 }

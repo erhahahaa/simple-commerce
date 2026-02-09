@@ -2,12 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
 import { useCallback, useState } from "react";
-import {
-	Image,
-	RefreshControl,
-	ScrollView,
-	TouchableOpacity,
-} from "react-native";
+import { Image, RefreshControl, TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -284,8 +280,9 @@ export default function WishlistScreen() {
 				</AnimatedView>
 
 				{isLoading ? (
-					<ScrollView
+					<KeyboardAwareScrollView
 						className="flex-1 px-5"
+						bottomOffset={20}
 						showsVerticalScrollIndicator={false}
 						contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
 					>
@@ -294,7 +291,7 @@ export default function WishlistScreen() {
 							<WishlistItemSkeleton isLight={isLight} />
 							<WishlistItemSkeleton isLight={isLight} />
 						</AnimatedView>
-					</ScrollView>
+					</KeyboardAwareScrollView>
 				) : isError ? (
 					<StyledView className="flex-1 items-center justify-center px-5">
 						<AnimatedView
@@ -331,8 +328,9 @@ export default function WishlistScreen() {
 						</AnimatedView>
 					</StyledView>
 				) : wishlistItems && wishlistItems.length > 0 ? (
-					<ScrollView
+					<KeyboardAwareScrollView
 						className="flex-1 px-5"
+						bottomOffset={20}
 						showsVerticalScrollIndicator={false}
 						contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
 						refreshControl={
@@ -360,7 +358,7 @@ export default function WishlistScreen() {
 								/>
 							))}
 						</AnimatedView>
-					</ScrollView>
+					</KeyboardAwareScrollView>
 				) : (
 					<StyledView className="flex-1 items-center justify-center px-5">
 						<AnimatedView

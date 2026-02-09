@@ -1,12 +1,12 @@
 import type { PropsWithChildren } from "react";
-import { ScrollView } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function AuthScreenWrapper({ children }: PropsWithChildren) {
 	const insets = useSafeAreaInsets();
 
 	return (
-		<ScrollView
+		<KeyboardAwareScrollView
 			contentContainerStyle={{
 				flexGrow: 1,
 				paddingTop: 20,
@@ -15,8 +15,9 @@ export function AuthScreenWrapper({ children }: PropsWithChildren) {
 			}}
 			keyboardShouldPersistTaps="handled"
 			showsVerticalScrollIndicator={false}
+			bottomOffset={20}
 		>
 			{children}
-		</ScrollView>
+		</KeyboardAwareScrollView>
 	);
 }

@@ -3,7 +3,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { Spinner, useToast } from "heroui-native";
-import { Alert, ScrollView, StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -133,12 +134,13 @@ export default function ProfileScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<ScrollView
+			<KeyboardAwareScrollView
 				contentContainerStyle={{
 					paddingTop: insets.top + 10,
 					paddingBottom: insets.bottom + 100,
 				}}
 				showsVerticalScrollIndicator={false}
+				bottomOffset={20}
 			>
 				{/* Header */}
 				<AnimatedView entering={FadeInDown.duration(200)} className="px-5 pb-6">
@@ -303,7 +305,7 @@ export default function ProfileScreen() {
 						isLoading={signOut.isPending}
 					/>
 				</AnimatedView>
-			</ScrollView>
+			</KeyboardAwareScrollView>
 		</GradientBackground>
 	);
 }

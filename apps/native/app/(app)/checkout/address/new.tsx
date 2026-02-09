@@ -3,7 +3,8 @@ import type { DomesticDestination } from "@simple-commerce/schema";
 import { router } from "expo-router";
 import { Button, Input, Spinner, useToast } from "heroui-native";
 import { useState } from "react";
-import { ScrollView, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DestinationSearch } from "@/components/destination-search";
@@ -152,9 +153,10 @@ export default function NewAddressScreen() {
 					</StyledText>
 				</AnimatedView>
 
-				<ScrollView
+				<KeyboardAwareScrollView
 					className="flex-1 px-5"
 					showsVerticalScrollIndicator={false}
+					bottomOffset={20}
 					contentContainerStyle={{ paddingBottom: 120 }}
 				>
 					<AnimatedView entering={FadeInUp.duration(200)}>
@@ -337,7 +339,7 @@ export default function NewAddressScreen() {
 							</StyledView>
 						</TouchableOpacity>
 					</AnimatedView>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 
 				{/* Bottom Action */}
 				<AnimatedView

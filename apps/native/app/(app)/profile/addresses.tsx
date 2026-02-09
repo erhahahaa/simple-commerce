@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
-import { Alert, ScrollView, TouchableOpacity } from "react-native";
+import { Alert, TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -259,9 +260,10 @@ export default function AddressesScreen() {
 						<Spinner size="lg" />
 					</StyledView>
 				) : addresses && addresses.length > 0 ? (
-					<ScrollView
+					<KeyboardAwareScrollView
 						className="flex-1 px-5"
 						showsVerticalScrollIndicator={false}
+						bottomOffset={20}
 						contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
 					>
 						<AnimatedView entering={FadeInUp.duration(200)}>
@@ -283,7 +285,7 @@ export default function AddressesScreen() {
 								/>
 							))}
 						</AnimatedView>
-					</ScrollView>
+					</KeyboardAwareScrollView>
 				) : (
 					<StyledView className="flex-1 items-center justify-center px-5">
 						<AnimatedView

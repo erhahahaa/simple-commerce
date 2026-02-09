@@ -1,6 +1,7 @@
 import { cn } from "heroui-native";
 import type { PropsWithChildren } from "react";
-import { ScrollView, type ViewProps } from "react-native";
+import type { ViewProps } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import type { AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatedView } from "@/components/uniwind";
@@ -24,9 +25,12 @@ export function Container({
 			}}
 			{...props}
 		>
-			<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+			<KeyboardAwareScrollView
+				contentContainerStyle={{ flexGrow: 1 }}
+				bottomOffset={20}
+			>
 				{children}
-			</ScrollView>
+			</KeyboardAwareScrollView>
 		</AnimatedView>
 	);
 }

@@ -4,7 +4,8 @@ import type { Href } from "expo-router";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
 import { useState } from "react";
-import { ScrollView, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -440,9 +441,10 @@ export default function CheckoutScreen() {
 					</StyledText>
 				</AnimatedView>
 
-				<ScrollView
+				<KeyboardAwareScrollView
 					className="flex-1 px-5"
 					showsVerticalScrollIndicator={false}
+					bottomOffset={20}
 					contentContainerStyle={{ paddingBottom: 200 }}
 				>
 					{/* Shipping Address Section */}
@@ -725,7 +727,7 @@ export default function CheckoutScreen() {
 							</StyledView>
 						</StyledView>
 					</AnimatedView>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 
 				{/* Bottom Action */}
 				<AnimatedView

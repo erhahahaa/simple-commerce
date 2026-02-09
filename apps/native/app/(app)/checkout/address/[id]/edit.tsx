@@ -3,7 +3,8 @@ import type { DomesticDestination } from "@simple-commerce/schema";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Input, Spinner, useToast } from "heroui-native";
 import { useEffect, useState } from "react";
-import { ScrollView, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DestinationSearch } from "@/components/destination-search";
@@ -209,8 +210,9 @@ export default function EditAddressScreen() {
 					</StyledText>
 				</AnimatedView>
 
-				<ScrollView
+				<KeyboardAwareScrollView
 					className="flex-1 px-5"
+					bottomOffset={20}
 					showsVerticalScrollIndicator={false}
 					contentContainerStyle={{ paddingBottom: 120 }}
 				>
@@ -431,7 +433,7 @@ export default function EditAddressScreen() {
 							</StyledView>
 						</TouchableOpacity>
 					</AnimatedView>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 
 				{/* Bottom Action */}
 				<AnimatedView

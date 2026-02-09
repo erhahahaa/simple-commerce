@@ -2,12 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Href } from "expo-router";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
-import {
-	Image,
-	RefreshControl,
-	ScrollView,
-	TouchableOpacity,
-} from "react-native";
+import { Image, RefreshControl, TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -354,8 +350,9 @@ export default function CartScreen() {
 				) : (
 					<>
 						{/* Cart Items */}
-						<ScrollView
+						<KeyboardAwareScrollView
 							className="flex-1 px-5"
+							bottomOffset={20}
 							showsVerticalScrollIndicator={false}
 							contentContainerStyle={{ paddingBottom: 200 }}
 							refreshControl={
@@ -372,7 +369,7 @@ export default function CartScreen() {
 									isUpdating={isUpdating}
 								/>
 							))}
-						</ScrollView>
+						</KeyboardAwareScrollView>
 
 						{/* Bottom Summary */}
 						<AnimatedView

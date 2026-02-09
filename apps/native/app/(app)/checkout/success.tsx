@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Href } from "expo-router";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Spinner } from "heroui-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -34,12 +35,14 @@ export default function PaymentSuccessScreen() {
 
 	return (
 		<GradientBackground variant="app">
-			<StyledView
-				className="flex-1 px-8"
-				style={{
+			<KeyboardAwareScrollView
+				contentContainerStyle={{
+					flexGrow: 1,
 					paddingTop: insets.top + 40,
 					paddingBottom: insets.bottom + 20,
+					paddingHorizontal: 32,
 				}}
+				bottomOffset={20}
 			>
 				{/* Success Icon */}
 				<AnimatedView
@@ -197,7 +200,7 @@ export default function PaymentSuccessScreen() {
 						</Button>
 					</AnimatedView>
 				</StyledView>
-			</StyledView>
+			</KeyboardAwareScrollView>
 		</GradientBackground>
 	);
 }

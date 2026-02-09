@@ -6,7 +6,7 @@ import { FadeIn } from "react-native-reanimated";
 import { Logo } from "@/components/logo";
 import { AnimatedView, StyledView } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { authClient } from "@/lib/auth-client";
+import { useGetSession } from "@/hooks/auth";
 
 // Theme-aware background colors to prevent flash during navigation
 const screenBackgroundColors = {
@@ -15,10 +15,10 @@ const screenBackgroundColors = {
 };
 
 export default function AppLayout() {
-	const { data: session, isPending } = authClient.useSession();
+	const { data: session, isLoading: sessionLoading } = useGetSession();
 	const { isLight } = useAppTheme();
 
-	if (isPending) {
+	if (sessionLoading) {
 		const gradientColors = isLight
 			? (["#a8edea", "#fed6e3", "#ffecd2"] as const)
 			: (["#0f0f1a", "#1a1a2e", "#16213e"] as const);
@@ -44,7 +44,7 @@ export default function AppLayout() {
 		);
 	}
 
-	if (!session) {
+	if (!session?.success || !session.data?.user) {
 		return <Redirect href="/(auth)/sign-in" />;
 	}
 

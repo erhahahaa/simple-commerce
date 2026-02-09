@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Href } from "expo-router";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
-import { Image, Linking, ScrollView, TouchableOpacity } from "react-native";
+import { Image, Linking, TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -393,7 +394,8 @@ export default function OrderDetailScreen() {
 					</StyledView>
 				</AnimatedView>
 
-				<ScrollView
+				<KeyboardAwareScrollView
+					bottomOffset={20}
 					showsVerticalScrollIndicator={false}
 					contentContainerStyle={{
 						paddingHorizontal: 20,
@@ -818,7 +820,7 @@ export default function OrderDetailScreen() {
 							</StyledView>
 						)}
 					</AnimatedView>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 
 				{/* Bottom Action Buttons */}
 				{(canPay || canCancel || canSimulate) && (

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Button, Input, Spinner, useToast } from "heroui-native";
 import { useEffect, useState } from "react";
-import { ScrollView } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
@@ -167,9 +167,10 @@ export default function EditProfileScreen() {
 					</StyledText>
 				</AnimatedView>
 
-				<ScrollView
+				<KeyboardAwareScrollView
 					className="flex-1 px-5"
 					showsVerticalScrollIndicator={false}
+					bottomOffset={20}
 					contentContainerStyle={{ paddingBottom: 120 }}
 				>
 					<AnimatedView entering={FadeInUp.duration(200)}>
@@ -284,7 +285,7 @@ export default function EditProfileScreen() {
 							</StyledView>
 						</StyledView>
 					</AnimatedView>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 
 				{/* Bottom Action */}
 				<AnimatedView
