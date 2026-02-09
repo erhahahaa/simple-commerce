@@ -1,9 +1,11 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+import { addressRouter } from "./address";
 import { cartRouter } from "./cart";
 import { categoryRouter } from "./category";
 import { productRouter } from "./product";
+import { shippingRouter } from "./shipping";
 
 export const appRouter = {
 	healthCheck: publicProcedure.handler(() => {
@@ -19,6 +21,8 @@ export const appRouter = {
 	category: categoryRouter,
 	product: productRouter,
 	cart: cartRouter,
+	address: addressRouter,
+	shipping: shippingRouter,
 };
 
 export type AppRouter = typeof appRouter;
