@@ -112,13 +112,18 @@ export function useSocialAuth(provider: SocialProvider) {
 	return useMutation({
 		mutationKey: ["social-auth", provider],
 		mutationFn: async () => {
-			const res = await authClient.signIn.social({ provider });
+			queryClient.clear();
+			const res = await authClient.signIn.social({
+				provider,
+				callbackURL: "/(app)/(tabs)",
+			});
 			if (res.error) {
 				return {
 					success: false,
 					error: res.error.message ?? "An unknown error occurred",
 				} satisfies ErrorResponse;
 			}
+			queryClient.clear();
 
 			return {
 				success: true,
