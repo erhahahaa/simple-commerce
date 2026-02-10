@@ -75,8 +75,8 @@ export default function SignUpScreen() {
 
 			toast.show({
 				variant: "success",
-				label: "Sign up successful",
-				description: result.message,
+				label: "Welcome to Simple Commerce!",
+				description: "Check your email to verify your account.",
 			});
 			router.replace("/(app)/(tabs)");
 		} catch (error) {

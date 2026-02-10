@@ -7,6 +7,7 @@ import { Alert, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EmailVerificationBanner } from "@/components/email-verification-banner";
 import { GradientBackground } from "@/components/gradient-background";
 import { Skeleton, SkeletonAvatar } from "@/components/skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,7 +19,11 @@ import {
 } from "@/components/uniwind";
 import { config } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useGetSession, useSignOut } from "@/hooks/auth";
+import {
+	useGetSession,
+	useSendVerificationEmail,
+	useSignOut,
+} from "@/hooks/auth";
 import { useProfile } from "@/hooks/user";
 
 type ProfileItemProps = {
@@ -97,6 +102,7 @@ export default function ProfileScreen() {
 	const { data: session, isLoading: sessionLoading } = useGetSession();
 	const { data: profile, isLoading: profileLoading } = useProfile();
 	const signOut = useSignOut();
+	const sendVerificationEmail = useSendVerificationEmail();
 
 	const isLoading = sessionLoading || profileLoading;
 	const user = session?.success ? session.data.user : null;
@@ -131,6 +137,36 @@ export default function ProfileScreen() {
 	// 		description: "Payment methods management will be available soon",
 	// 	});
 	// };
+
+	const handleResendVerification = async () => {
+		if (!user || sendVerificationEmail.isPending) return;
+
+		try {
+			const result = await sendVerificationEmail.mutateAsync(user.email);
+
+			if (!result.success) {
+				toast.show({
+					variant: "danger",
+					label: "Failed to send",
+					description: result.error,
+				});
+				return;
+			}
+
+			toast.show({
+				variant: "success",
+				label: "Email sent",
+				description: "Please check your inbox for the verification link.",
+			});
+		} catch (error) {
+			console.error("Send verification email error:", error);
+			toast.show({
+				variant: "danger",
+				label: "Failed to send",
+				description: "Please check your connection and try again.",
+			});
+		}
+	};
 
 	return (
 		<GradientBackground variant="app">
@@ -192,30 +228,49 @@ export default function ProfileScreen() {
 											{profile.phone}
 										</StyledText>
 									)}
-									<StyledView className="mt-2 flex-row items-center">
-										<Ionicons
-											name={
-												user?.emailVerified
-													? "shield-checkmark"
-													: "shield-outline"
-											}
-											size={14}
-											color={user?.emailVerified ? "#22c55e" : "#f59e0b"}
-										/>
+									<StyledPressable
+										className="mt-2 flex-row items-center"
+										onPress={
+											user?.emailVerified ? undefined : handleResendVerification
+										}
+										disabled={
+											user?.emailVerified || sendVerificationEmail.isPending
+										}
+									>
+										{sendVerificationEmail.isPending ? (
+											<Spinner size="sm" />
+										) : (
+											<Ionicons
+												name={
+													user?.emailVerified
+														? "shield-checkmark"
+														: "shield-outline"
+												}
+												size={14}
+												color={user?.emailVerified ? "#22c55e" : "#f59e0b"}
+											/>
+										)}
 										<StyledText
 											className="ml-1 text-xs"
 											style={{
 												color: user?.emailVerified ? "#22c55e" : "#f59e0b",
 											}}
 										>
-											{user?.emailVerified ? "Verified" : "Not verified"}
+											{user?.emailVerified
+												? "Verified"
+												: sendVerificationEmail.isPending
+													? "Sending..."
+													: "Tap to verify"}
 										</StyledText>
-									</StyledView>
+									</StyledPressable>
 								</StyledView>
 							</StyledView>
 						)}
 					</StyledView>
 				</AnimatedView>
+
+				{/* Email Verification Banner */}
+				<EmailVerificationBanner />
 
 				{/* Settings Section */}
 				<AnimatedView
