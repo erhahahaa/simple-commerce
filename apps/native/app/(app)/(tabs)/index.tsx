@@ -236,7 +236,8 @@ export default function HomeScreen() {
 					</StyledView>
 					<StyledView className="flex-row items-center gap-2">
 						<ThemeToggle />
-						<StyledPressable
+						{/* NOTE: planned but not in requirements */}
+						{/* <StyledPressable
 							className="h-12 w-12 items-center justify-center rounded-full"
 							style={{
 								backgroundColor: isLight
@@ -257,7 +258,7 @@ export default function HomeScreen() {
 								color={isLight ? "#1a1a2e" : "#ffffff"}
 							/>
 							<StyledView className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" />
-						</StyledPressable>
+						</StyledPressable> */}
 						<StyledPressable
 							className="h-12 w-12 items-center justify-center overflow-hidden rounded-full"
 							style={{
