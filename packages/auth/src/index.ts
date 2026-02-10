@@ -1,5 +1,5 @@
 import { expo } from "@better-auth/expo";
-import { db } from "@simple-commerce/db";
+import { db, markUserVerified } from "@simple-commerce/db";
 import * as schema from "@simple-commerce/db/schema/auth";
 import { env } from "@simple-commerce/env/server";
 import { mailer } from "@simple-commerce/mailer";
@@ -34,9 +34,19 @@ export const auth = betterAuth({
 			});
 		},
 		onPasswordReset: async ({ user }) => {
+			await markUserVerified(user.id);
 			void mailer.sendPasswordResetConfirmation({
 				to: user.email,
 				name: user.name ?? undefined,
+			});
+		},
+	},
+	emailVerification: {
+		sendVerificationEmail: async ({ user, token }) => {
+			void mailer.sendVerificationEmail({
+				to: user.email,
+				name: user.name ?? undefined,
+				token,
 			});
 		},
 	},
