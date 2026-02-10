@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useToast } from "heroui-native";
 import { useCallback, useState } from "react";
 import { RefreshControl, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -185,7 +184,6 @@ function FeatureCard({
 
 export default function HomeScreen() {
 	const insets = useSafeAreaInsets();
-	const { toast } = useToast();
 	const { data: session } = useGetSession();
 	const { isLight } = useAppTheme();
 	const {
