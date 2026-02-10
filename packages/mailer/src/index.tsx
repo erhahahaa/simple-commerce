@@ -1,6 +1,8 @@
 import { env } from "@simple-commerce/env/server";
 import { Resend } from "resend";
+import PasswordResetConfirmationEmail from "../emails/password-reset-confirmation";
 import ResetPasswordEmail from "../emails/reset-password";
+import VerifyEmailTemplate from "../emails/verify-email";
 
 interface SendMailProps {
 	from: string;
@@ -23,12 +25,19 @@ interface SendPasswordResetConfirmationProps {
 	name?: string;
 }
 
+interface SendVerificationEmailProps {
+	to: string;
+	name?: string;
+	token: string;
+}
+
 interface Mailer {
 	send: (props: SendMailProps) => Promise<void>;
 	sendResetPasswordEmail: (props: SendResetPasswordEmailProps) => Promise<void>;
 	sendPasswordResetConfirmation: (
 		props: SendPasswordResetConfirmationProps,
 	) => Promise<void>;
+	sendVerificationEmail: (props: SendVerificationEmailProps) => Promise<void>;
 }
 
 function createMailer(): Mailer {
@@ -77,13 +86,35 @@ function createMailer(): Mailer {
 		to,
 		name,
 	}: SendPasswordResetConfirmationProps) {
-		const greeting = name ? `Hi ${name}` : "Hi";
+		const react = <PasswordResetConfirmationEmail name={name} />;
 
 		await send({
 			from: "[DEMO] Simple Commerce <demo-sc-notifications@info.zenta.dev>",
 			to: to,
 			subject: "Your Password Has Been Reset",
-			text: `${greeting},\n\nYour password has been successfully reset. If you did not make this change, please contact our support team immediately.\n\nBest regards,\nSimple Commerce Team`,
+			react,
+		});
+	}
+
+	async function sendVerificationEmail({
+		to,
+		name,
+		token,
+	}: SendVerificationEmailProps) {
+		const verificationLink = `${env.BETTER_AUTH_URL}/app/verify-email?token=${token}`;
+		const react = (
+			<VerifyEmailTemplate
+				name={name}
+				verificationLink={verificationLink}
+				expiresIn="24 hours"
+			/>
+		);
+
+		await send({
+			from: "[DEMO] Simple Commerce <demo-sc-verification@info.zenta.dev>",
+			to: to,
+			subject: "Verify Your Email Address",
+			react,
 		});
 	}
 
@@ -91,6 +122,7 @@ function createMailer(): Mailer {
 		send,
 		sendResetPasswordEmail,
 		sendPasswordResetConfirmation,
+		sendVerificationEmail,
 	};
 }
 
