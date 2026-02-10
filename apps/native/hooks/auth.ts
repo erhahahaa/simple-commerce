@@ -168,3 +168,48 @@ export function useResetPassword() {
 		},
 	});
 }
+
+export function useSendVerificationEmail() {
+	return useMutation({
+		mutationKey: ["send-verification-email"],
+		mutationFn: async (email: string) => {
+			const res = await authClient.sendVerificationEmail({ email });
+			if (res.error) {
+				return {
+					success: false,
+					error: res.error.message ?? "An unknown error occurred",
+				} satisfies ErrorResponse;
+			}
+
+			return {
+				success: true,
+				message: "Verification email sent",
+				data: undefined,
+			} satisfies EmptyResponse;
+		},
+	});
+}
+
+export function useVerifyEmail() {
+	return useMutation({
+		mutationKey: ["verify-email"],
+		mutationFn: async (token: string) => {
+			const res = await authClient.verifyEmail({ query: { token } });
+			if (res.error) {
+				return {
+					success: false,
+					error: res.error.message ?? "An unknown error occurred",
+				} satisfies ErrorResponse;
+			}
+
+			// Refetch session to update emailVerified status
+			await queryClient.refetchQueries({ queryKey: AUTH_KEYS.SESSION });
+
+			return {
+				success: true,
+				message: "Email verified successfully",
+				data: undefined,
+			} satisfies EmptyResponse;
+		},
+	});
+}
