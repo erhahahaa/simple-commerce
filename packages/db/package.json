@@ -18,6 +18,7 @@
 		"db:studio": "drizzle-kit studio",
 		"db:migrate": "drizzle-kit migrate",
 		"db:seed": "bun with-env bun run src/seed.ts",
+		"db:reset": "bun with-env bun run src/reset.ts",
 		"db:start": "docker compose up -d",
 		"db:watch": "docker compose up",
 		"db:stop": "docker compose stop",
