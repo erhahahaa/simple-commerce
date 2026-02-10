@@ -18,7 +18,7 @@ import {
 } from "@/components/uniwind";
 import { formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useGetSession } from "@/hooks/auth";
+import { useSession } from "@/contexts/session-context";
 import { useCartCount } from "@/hooks/cart";
 import { useUserStats } from "@/hooks/user";
 
@@ -184,7 +184,7 @@ function FeatureCard({
 
 export default function HomeScreen() {
 	const insets = useSafeAreaInsets();
-	const { data: session } = useGetSession();
+	const { user } = useSession();
 	const { isLight } = useAppTheme();
 	const {
 		data: userStats,
@@ -204,7 +204,6 @@ export default function HomeScreen() {
 		setRefreshing(false);
 	}, [refetchStats, refetchCart]);
 
-	const user = session?.success ? session.data.user : null;
 	const firstName = user?.name?.split(" ")[0] || "there";
 
 	return (

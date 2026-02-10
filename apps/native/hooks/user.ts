@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { emitSessionEvent } from "@/contexts/session-context";
 import { orpc, queryClient } from "@/utils/orpc";
-import { AUTH_KEYS } from "./auth";
 
 export const USER_KEYS = {
 	PROFILE: orpc.user.getProfile.queryKey(),
@@ -22,7 +22,7 @@ export function useUpdateProfile() {
 		orpc.user.updateProfile.mutationOptions({
 			onSuccess: () => {
 				// Invalidate profile query to refetch updated data
-				queryClient.invalidateQueries({ queryKey: AUTH_KEYS.SESSION });
+				emitSessionEvent("refetch");
 				queryClient.invalidateQueries({ queryKey: USER_KEYS.PROFILE });
 				queryClient.invalidateQueries({ queryKey: USER_KEYS.STATS });
 			},

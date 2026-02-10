@@ -19,11 +19,8 @@ import {
 } from "@/components/uniwind";
 import { config } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import {
-	useGetSession,
-	useSendVerificationEmail,
-	useSignOut,
-} from "@/hooks/auth";
+import { useSession } from "@/contexts/session-context";
+import { useSendVerificationEmail, useSignOut } from "@/hooks/auth";
 import { useProfile } from "@/hooks/user";
 
 type ProfileItemProps = {
@@ -99,13 +96,12 @@ export default function ProfileScreen() {
 	const insets = useSafeAreaInsets();
 	const { isLight } = useAppTheme();
 	const { toast } = useToast();
-	const { data: session, isLoading: sessionLoading } = useGetSession();
+	const { user, isLoading: sessionLoading } = useSession();
 	const { data: profile, isLoading: profileLoading } = useProfile();
 	const signOut = useSignOut();
 	const sendVerificationEmail = useSendVerificationEmail();
 
 	const isLoading = sessionLoading || profileLoading;
-	const user = session?.success ? session.data.user : null;
 
 	const handleSignOut = async () => {
 		if (signOut.isPending) return;

@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Spinner, useToast } from "heroui-native";
 import { StyledPressable, StyledText, StyledView } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useGetSession, useSendVerificationEmail } from "@/hooks/auth";
+import { useSession } from "@/contexts/session-context";
+import { useSendVerificationEmail } from "@/hooks/auth";
 
 interface EmailVerificationBannerProps {
 	/**
@@ -14,12 +15,10 @@ interface EmailVerificationBannerProps {
 export function EmailVerificationBanner({
 	className,
 }: EmailVerificationBannerProps) {
-	const { data: session } = useGetSession();
+	const { user } = useSession();
 	const sendVerificationEmail = useSendVerificationEmail();
 	const { toast } = useToast();
 	const { isLight } = useAppTheme();
-
-	const user = session?.success ? session.data.user : null;
 
 	// Don't show if user is verified or not logged in
 	if (!user || user.emailVerified) {

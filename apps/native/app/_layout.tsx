@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
-import { useGetSession } from "@/hooks/auth";
+import { SessionProvider, useSession } from "@/contexts/session-context";
 import { queryClient } from "@/utils/orpc";
 
 export const unstable_settings = {
@@ -21,18 +21,18 @@ const screenBackgroundColors = {
 
 function StackLayout() {
 	const { isLight } = useAppTheme();
-	const { data: session, isLoading: sessionLoading } = useGetSession();
+	const { isAuthenticated, isLoading } = useSession();
 	const router = useRouter();
 
 	useEffect(() => {
-		if (!sessionLoading) {
-			if (!session?.success || !session.data?.user) {
+		if (!isLoading) {
+			if (!isAuthenticated) {
 				router.replace("/(auth)/sign-in");
 			} else {
 				router.replace("/(app)/(tabs)");
 			}
 		}
-	}, [sessionLoading, session, router]);
+	}, [isLoading, isAuthenticated, router]);
 
 	return (
 		<Stack
@@ -59,7 +59,9 @@ export default function Layout() {
 				<KeyboardProvider>
 					<AppThemeProvider>
 						<HeroUINativeProvider>
-							<StackLayout />
+							<SessionProvider>
+								<StackLayout />
+							</SessionProvider>
 						</HeroUINativeProvider>
 					</AppThemeProvider>
 				</KeyboardProvider>

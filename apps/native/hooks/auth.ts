@@ -1,6 +1,5 @@
 import type {
 	ForgotPasswordRequest,
-	GetSessionResponse,
 	ResetPasswordRequest,
 	SignInRequest,
 	SignInResponse,
@@ -12,13 +11,10 @@ import type {
 	EmptyResponse,
 	ErrorResponse,
 } from "@simple-commerce/schema/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { emitSessionEvent } from "@/contexts/session-context";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/orpc";
-
-export const AUTH_KEYS = {
-	SESSION: ["session"],
-} as const;
 
 export function useSignIn() {
 	return useMutation({
@@ -33,7 +29,7 @@ export function useSignIn() {
 				} satisfies ErrorResponse;
 			}
 
-			await queryClient.refetchQueries();
+			emitSessionEvent("refetch");
 			return {
 				success: true,
 				message: "Signed in successfully",
@@ -55,7 +51,7 @@ export function useSignUp() {
 				} satisfies ErrorResponse;
 			}
 
-			await queryClient.refetchQueries();
+			emitSessionEvent("refetch");
 			return {
 				success: true,
 				message: "Signed up successfully",
@@ -78,33 +74,12 @@ export function useSignOut() {
 			}
 
 			queryClient.clear();
+			emitSessionEvent("clear");
 			return {
 				success: true,
 				message: "Signed out successfully",
 			} satisfies { success: true; message: string };
 		},
-	});
-}
-
-export function useGetSession() {
-	return useQuery({
-		queryKey: ["session"],
-		queryFn: async () => {
-			const res = await authClient.getSession();
-			if (res.error || res.data === null) {
-				return {
-					success: false,
-					error: res.error?.message ?? "An unknown error occurred",
-				} satisfies ErrorResponse;
-			}
-
-			return {
-				success: true,
-				data: res.data,
-			} satisfies GetSessionResponse;
-		},
-		retry: false,
-		staleTime: 1 * 60 * 1000, // 1 minute
 	});
 }
 
@@ -123,11 +98,12 @@ export function useSocialAuth(provider: SocialProvider) {
 					error: res.error.message ?? "An unknown error occurred",
 				} satisfies ErrorResponse;
 			}
-			queryClient.clear();
+
+			emitSessionEvent("refetch");
 
 			return {
 				success: true,
-				message: "Redirecting to social provider",
+				message: "Signed in successfully",
 				data: undefined,
 			} satisfies EmptyResponse;
 		},
@@ -210,7 +186,7 @@ export function useVerifyEmail() {
 			}
 
 			// Refetch session to update emailVerified status
-			await queryClient.refetchQueries({ queryKey: AUTH_KEYS.SESSION });
+			emitSessionEvent("refetch");
 
 			return {
 				success: true,
