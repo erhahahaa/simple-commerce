@@ -24,6 +24,7 @@ export function useSignIn() {
 	return useMutation({
 		mutationKey: ["sign-in"],
 		mutationFn: async (body: SignInRequest) => {
+			queryClient.clear();
 			const res = await authClient.signIn.email(body);
 			if (res.error) {
 				return {
@@ -103,6 +104,7 @@ export function useGetSession() {
 			} satisfies GetSessionResponse;
 		},
 		retry: false,
+		staleTime: 1 * 60 * 1000, // 1 minute
 	});
 }
 

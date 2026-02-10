@@ -1,11 +1,12 @@
 import "@/global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-
 import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
+import { useGetSession } from "@/hooks/auth";
 import { queryClient } from "@/utils/orpc";
 
 export const unstable_settings = {
@@ -20,6 +21,18 @@ const screenBackgroundColors = {
 
 function StackLayout() {
 	const { isLight } = useAppTheme();
+	const { data: session, isLoading: sessionLoading } = useGetSession();
+	const router = useRouter();
+
+	useEffect(() => {
+		if (!sessionLoading) {
+			if (!session?.success || !session.data?.user) {
+				router.replace("/(auth)/sign-in");
+			} else {
+				router.replace("/(app)/(tabs)");
+			}
+		}
+	}, [sessionLoading, session, router]);
 
 	return (
 		<Stack

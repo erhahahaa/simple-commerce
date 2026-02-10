@@ -18,8 +18,12 @@ export default function AuthLayout() {
 	const router = useRouter();
 
 	useEffect(() => {
-		if (!sessionLoading && (!session?.success || !session.data?.user)) {
-			router.replace("/(auth)/sign-in");
+		if (!sessionLoading) {
+			if (!session?.success || !session.data?.user) {
+				router.replace("/(auth)/sign-in");
+			} else {
+				router.replace("/(app)/(tabs)");
+			}
 		}
 	}, [sessionLoading, session, router]);
 
