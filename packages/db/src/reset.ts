@@ -1,21 +1,28 @@
-import { sql } from "drizzle-orm";
+import { getTableName, is, sql, Table } from "drizzle-orm";
 import { db } from "./index";
 import * as schema from "./schema";
 
 export async function resetDatabase() {
-	// turn off foreign key checks
-	await db.execute(sql`SET session_replication_role = 'replica';`);
+	const tableNames = Object.values(schema)
+		.filter(
+			(table) =>
+				is(table, Table) && typeof table === "object" && table !== null,
+		)
+		.map((table) => `"${getTableName(table)}"`)
+		.join(", ");
 
-	// truncate all tables
-	for (const table of Object.values(schema)) {
-		if (typeof table !== "object" || !("name" in table)) {
-			continue;
-		}
-		await db.delete(table).where(sql`1=1`);
+	if (!tableNames) {
+		console.warn("No tables found to reset.");
+		return;
 	}
 
-	// turn on foreign key checks
-	await db.execute(sql`SET session_replication_role = 'origin';`);
+	await db.execute(
+		sql.raw(`
+			TRUNCATE ${tableNames}
+			RESTART IDENTITY
+			CASCADE;
+		`),
+	);
 }
 
 resetDatabase()
