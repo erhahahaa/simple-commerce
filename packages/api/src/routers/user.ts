@@ -23,7 +23,7 @@ export const userRouter = {
 			});
 
 			if (!result) {
-				throw new Error("User not found");
+				throw new Error(`User not found (id: ${userId})`);
 			}
 
 			return result;
@@ -37,6 +37,15 @@ export const userRouter = {
 		.output(UserSchema)
 		.handler(async ({ context, input }) => {
 			const userId = context.session.user.id;
+
+			// Check if there's anything to update
+			if (
+				input.name === undefined &&
+				input.phone === undefined &&
+				input.image === undefined
+			) {
+				throw new Error("No fields provided to update");
+			}
 
 			const updateData: Record<string, unknown> = {
 				updatedAt: new Date(),
@@ -59,7 +68,7 @@ export const userRouter = {
 				.returning();
 
 			if (!result) {
-				throw new Error("Failed to update profile");
+				throw new Error(`Failed to update profile for user (id: ${userId})`);
 			}
 
 			return result;

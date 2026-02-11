@@ -92,7 +92,7 @@ export const productRouter = {
 	 * Get product by ID
 	 */
 	getById: publicProcedure
-		.input(z.object({ id: z.string() }))
+		.input(z.object({ id: z.string().min(1, "Product ID is required") }))
 		.output(ProductWithCategorySchema.nullable())
 		.handler(async ({ input }) => {
 			const result = await db.query.product.findFirst({
@@ -108,7 +108,7 @@ export const productRouter = {
 	 * Get product by slug
 	 */
 	getBySlug: publicProcedure
-		.input(z.object({ slug: z.string() }))
+		.input(z.object({ slug: z.string().min(1, "Product slug is required") }))
 		.output(ProductWithCategorySchema.nullable())
 		.handler(async ({ input }) => {
 			const result = await db.query.product.findFirst({
@@ -124,7 +124,16 @@ export const productRouter = {
 	 * Get featured products (latest products with stock)
 	 */
 	featured: publicProcedure
-		.input(z.object({ limit: z.number().int().min(1).max(20).default(8) }))
+		.input(
+			z.object({
+				limit: z
+					.number()
+					.int()
+					.min(1, "Limit must be at least 1")
+					.max(20, "Limit cannot exceed 20")
+					.default(8),
+			}),
+		)
 		.output(z.array(ProductWithCategorySchema))
 		.handler(async ({ input }) => {
 			const products = await db.query.product.findMany({
@@ -145,6 +154,24 @@ export const productRouter = {
 		.input(CreateProductSchema)
 		.output(ProductSchema)
 		.handler(async ({ input }) => {
+			// Check if slug is already taken
+			const existingProduct = await db.query.product.findFirst({
+				where: eq(product.slug, input.slug),
+			});
+			if (existingProduct) {
+				throw new Error(`Product with slug "${input.slug}" already exists`);
+			}
+
+			// Validate category exists if provided
+			if (input.categoryId) {
+				const existingCategory = await db.query.category.findFirst({
+					where: eq(category.id, input.categoryId),
+				});
+				if (!existingCategory) {
+					throw new Error(`Category not found (id: ${input.categoryId})`);
+				}
+			}
+
 			const id = `prod_${crypto.randomUUID()}`;
 			const [result] = await db
 				.insert(product)
@@ -171,12 +198,42 @@ export const productRouter = {
 	update: protectedProcedure
 		.input(
 			z.object({
-				id: z.string(),
+				id: z.string().min(1, "Product ID is required"),
 				data: UpdateProductSchema,
 			}),
 		)
-		.output(ProductSchema.nullable())
+		.output(ProductSchema)
 		.handler(async ({ input }) => {
+			// Check if product exists
+			const existingProduct = await db.query.product.findFirst({
+				where: eq(product.id, input.id),
+			});
+			if (!existingProduct) {
+				throw new Error(`Product not found (id: ${input.id})`);
+			}
+
+			// Check if slug is being changed and if new slug is already taken
+			if (input.data.slug && input.data.slug !== existingProduct.slug) {
+				const slugExists = await db.query.product.findFirst({
+					where: eq(product.slug, input.data.slug),
+				});
+				if (slugExists) {
+					throw new Error(
+						`Product with slug "${input.data.slug}" already exists`,
+					);
+				}
+			}
+
+			// Validate category exists if provided
+			if (input.data.categoryId) {
+				const existingCategory = await db.query.category.findFirst({
+					where: eq(category.id, input.data.categoryId),
+				});
+				if (!existingCategory) {
+					throw new Error(`Category not found (id: ${input.data.categoryId})`);
+				}
+			}
+
 			const [result] = await db
 				.update(product)
 				.set({
@@ -185,16 +242,29 @@ export const productRouter = {
 				})
 				.where(eq(product.id, input.id))
 				.returning();
-			return result ?? null;
+
+			if (!result) {
+				throw new Error(`Failed to update product (id: ${input.id})`);
+			}
+
+			return result;
 		}),
 
 	/**
 	 * Delete a product (protected - admin only in future)
 	 */
 	delete: protectedProcedure
-		.input(z.object({ id: z.string() }))
+		.input(z.object({ id: z.string().min(1, "Product ID is required") }))
 		.output(z.object({ success: z.boolean() }))
 		.handler(async ({ input }) => {
+			// Check if product exists
+			const existingProduct = await db.query.product.findFirst({
+				where: eq(product.id, input.id),
+			});
+			if (!existingProduct) {
+				throw new Error(`Product not found (id: ${input.id})`);
+			}
+
 			await db.delete(product).where(eq(product.id, input.id));
 			return { success: true };
 		}),
