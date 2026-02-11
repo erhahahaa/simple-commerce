@@ -36,7 +36,7 @@ async function getOrCreateCart(
 		}
 
 		return newCart;
-	} catch (error) {
+	} catch (_error) {
 		// If insert failed due to unique constraint, fetch the existing cart
 		const existingCart = await tx.query.cart.findFirst({
 			where: eq(cart.userId, userId),
