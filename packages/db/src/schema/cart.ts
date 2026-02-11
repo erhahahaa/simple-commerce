@@ -1,4 +1,11 @@
-import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	index,
+	integer,
+	pgTable,
+	text,
+	timestamp,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { product } from "./product";
 
@@ -38,5 +45,6 @@ export const cartItem = pgTable(
 	(table) => [
 		index("cart_item_cart_idx").on(table.cartId),
 		index("cart_item_product_idx").on(table.productId),
+		uniqueIndex("cart_item_unique_idx").on(table.cartId, table.productId),
 	],
 );
