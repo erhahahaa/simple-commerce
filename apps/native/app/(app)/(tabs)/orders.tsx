@@ -1,4 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import type {
+	OrderStatus,
+	OrderWithItems,
+	PaymentStatus,
+} from "@simple-commerce/schema";
 import type { Href } from "expo-router";
 import { router } from "expo-router";
 import { Button, Spinner } from "heroui-native";
@@ -16,41 +21,7 @@ import { GradientBackground } from "@/components/gradient-background";
 import { AnimatedView, StyledText, StyledView } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useOrders } from "@/hooks/checkout";
-
-type OrderStatus =
-	| "pending"
-	| "processing"
-	| "shipped"
-	| "delivered"
-	| "cancelled";
-type PaymentStatus = "pending" | "paid" | "failed" | "expired" | "refunded";
-
-type OrderItem = {
-	id: string;
-	productName: string;
-	productImage: string | null;
-	quantity: number;
-	price: number;
-};
-
-type Order = {
-	id: string;
-	status: OrderStatus;
-	paymentStatus: PaymentStatus;
-	subtotal: number;
-	shippingCost: number;
-	totalAmount: number;
-	midtransOrderId: string | null;
-	snapUrl: string | null;
-	createdAt: Date;
-	items: OrderItem[];
-	shipping?: {
-		courier: string;
-		service: string;
-		trackingNumber: string | null;
-		status: string;
-	} | null;
-};
+import { formatCurrency, formatDateShort } from "@/utils/format";
 
 const STATUS_TABS: { key: OrderStatus | "all"; label: string }[] = [
 	{ key: "all", label: "All" },
@@ -60,24 +31,6 @@ const STATUS_TABS: { key: OrderStatus | "all"; label: string }[] = [
 	{ key: "delivered", label: "Delivered" },
 	{ key: "cancelled", label: "Cancelled" },
 ];
-
-function formatPrice(price: number) {
-	return new Intl.NumberFormat("id-ID", {
-		style: "currency",
-		currency: "IDR",
-		minimumFractionDigits: 0,
-	}).format(price);
-}
-
-function formatDate(date: Date) {
-	return new Intl.DateTimeFormat("id-ID", {
-		day: "numeric",
-		month: "short",
-		year: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(new Date(date));
-}
 
 function getStatusColor(status: OrderStatus, _isLight: boolean) {
 	switch (status) {
@@ -113,7 +66,7 @@ function getPaymentStatusColor(status: PaymentStatus) {
 }
 
 interface OrderCardProps {
-	order: Order;
+	order: OrderWithItems;
 	isLight: boolean;
 	onPress: () => void;
 }
@@ -139,7 +92,7 @@ function OrderCard({ order, isLight, onPress }: OrderCardProps) {
 				<StyledView className="mb-3 flex-row items-center justify-between">
 					<StyledView>
 						<StyledText className="font-medium text-muted text-xs">
-							{formatDate(order.createdAt)}
+							{formatDateShort(order.createdAt)}
 						</StyledText>
 						<StyledText className="font-semibold text-foreground text-sm">
 							{order.midtransOrderId ?? order.id.slice(0, 16)}
@@ -206,7 +159,7 @@ function OrderCard({ order, isLight, onPress }: OrderCardProps) {
 								{firstItem.productName}
 							</StyledText>
 							<StyledText className="text-muted text-sm">
-								{firstItem.quantity} x {formatPrice(firstItem.price)}
+								{firstItem.quantity} x {formatCurrency(firstItem.price)}
 							</StyledText>
 							{remainingItems > 0 && (
 								<StyledText className="mt-1 text-muted text-xs">
@@ -232,7 +185,7 @@ function OrderCard({ order, isLight, onPress }: OrderCardProps) {
 							className="font-bold"
 							style={{ color: isLight ? "#667eea" : "#a855f7" }}
 						>
-							{formatPrice(order.totalAmount)}
+							{formatCurrency(order.totalAmount)}
 						</StyledText>
 					</StyledView>
 
@@ -298,7 +251,7 @@ export default function OrdersScreen() {
 		limit: 50,
 	});
 
-	const orders = (ordersData?.orders as Order[] | undefined) ?? [];
+	const orders = ordersData?.orders ?? [];
 	const isEmpty = orders.length === 0;
 
 	const handleOrderPress = (orderId: string) => {

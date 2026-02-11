@@ -18,6 +18,7 @@ import {
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useCreateAddress } from "@/hooks/checkout";
 import { useProfile } from "@/hooks/user";
+import { buildAddressPayload, getDestinationDisplay } from "@/utils/address";
 
 export default function NewAddressScreen() {
 	const insets = useSafeAreaInsets();
@@ -55,43 +56,28 @@ export default function NewAddressScreen() {
 	const handleSubmit = () => {
 		if (!selectedDestination) return;
 
-		createMutation.mutate(
-			{
-				label: label.trim(),
-				recipientName: recipientName.trim(),
-				phone: phone.trim(),
-				// V2 location fields
-				provinceId: "", // Legacy field - not used in V2
-				provinceName: selectedDestination.province_name,
-				cityId: "", // Legacy field - not used in V2
-				cityName: selectedDestination.city_name,
-				districtId: "", // We don't have separate IDs from the search endpoint
-				districtName: selectedDestination.district_name,
-				subdistrictId: "",
-				subdistrictName: selectedDestination.subdistrict_name,
-				destinationId: selectedDestination.id, // This is the key field for V2
-				postalCode: selectedDestination.zip_code,
-				address: address.trim(),
-				isDefault,
-			},
-			{
-				onSuccess: () => {
-					toast.show({
-						variant: "success",
-						label: "Address added",
-						description: "Your new address has been saved",
-					});
-					router.back();
-				},
-				onError: (error) => {
-					toast.show({
-						variant: "danger",
-						label: "Failed to add address",
-						description: error.message,
-					});
-				},
-			},
+		const payload = buildAddressPayload(
+			{ label, recipientName, phone, address, isDefault },
+			selectedDestination,
 		);
+
+		createMutation.mutate(payload, {
+			onSuccess: () => {
+				toast.show({
+					variant: "success",
+					label: "Address added",
+					description: "Your new address has been saved",
+				});
+				router.back();
+			},
+			onError: (error) => {
+				toast.show({
+					variant: "danger",
+					label: "Failed to add address",
+					description: error.message,
+				});
+			},
+		});
 	};
 
 	const handleDestinationSelect = (destination: DomesticDestination) => {
@@ -110,15 +96,7 @@ export default function NewAddressScreen() {
 	const canUseMyInfo = !!(profile?.name || profile?.phone);
 
 	// Format selected destination for display
-	const getDestinationDisplay = () => {
-		if (!selectedDestination) return null;
-		return {
-			main: `${selectedDestination.subdistrict_name}, ${selectedDestination.district_name}`,
-			sub: `${selectedDestination.city_name}, ${selectedDestination.province_name} - ${selectedDestination.zip_code}`,
-		};
-	};
-
-	const destinationDisplay = getDestinationDisplay();
+	const destinationDisplay = getDestinationDisplay(selectedDestination);
 
 	return (
 		<GradientBackground variant="app">

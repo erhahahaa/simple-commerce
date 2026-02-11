@@ -17,6 +17,7 @@ import {
 } from "@/components/uniwind";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useAddressById, useUpdateAddress } from "@/hooks/checkout";
+import { buildAddressPayload, getDestinationDisplay } from "@/utils/address";
 
 export default function EditAddressScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -84,28 +85,13 @@ export default function EditAddressScreen() {
 	const handleSubmit = () => {
 		if (!selectedDestination || !id) return;
 
+		const payload = buildAddressPayload(
+			{ label, recipientName, phone, address, isDefault },
+			selectedDestination,
+		);
+
 		updateMutation.mutate(
-			{
-				id,
-				data: {
-					label: label.trim(),
-					recipientName: recipientName.trim(),
-					phone: phone.trim(),
-					// V2 location fields
-					provinceId: "", // Legacy field - not used in V2
-					provinceName: selectedDestination.province_name,
-					cityId: "", // Legacy field - not used in V2
-					cityName: selectedDestination.city_name,
-					districtId: "",
-					districtName: selectedDestination.district_name,
-					subdistrictId: "",
-					subdistrictName: selectedDestination.subdistrict_name,
-					destinationId: selectedDestination.id,
-					postalCode: selectedDestination.zip_code,
-					address: address.trim(),
-					isDefault,
-				},
-			},
+			{ id, data: payload },
 			{
 				onSuccess: () => {
 					toast.show({
@@ -131,18 +117,11 @@ export default function EditAddressScreen() {
 	};
 
 	// Format selected destination for display
-	const getDestinationDisplay = () => {
-		if (!selectedDestination) return null;
-		return {
-			main: `${selectedDestination.subdistrict_name}, ${selectedDestination.district_name}`,
-			sub: `${selectedDestination.city_name}, ${selectedDestination.province_name} - ${selectedDestination.zip_code}`,
-		};
-	};
+	const destinationDisplay = getDestinationDisplay(selectedDestination);
 
-	const destinationDisplay = getDestinationDisplay();
-
-	// Check if this is a legacy address that needs updating
-	const needsLocationUpdate = existingAddress && !existingAddress.destinationId;
+	// Check if this is a legacy address that needs updating (use explicit null check)
+	const needsLocationUpdate =
+		existingAddress && existingAddress.destinationId === null;
 
 	if (isLoadingAddress) {
 		return (

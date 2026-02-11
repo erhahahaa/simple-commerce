@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import type { CartItemWithProduct } from "@simple-commerce/schema";
 import type { Href } from "expo-router";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
@@ -15,30 +16,10 @@ import {
 	useRemoveFromCart,
 	useUpdateCartItem,
 } from "@/hooks/cart";
-
-function formatPrice(price: number) {
-	return new Intl.NumberFormat("id-ID", {
-		style: "currency",
-		currency: "IDR",
-		minimumFractionDigits: 0,
-	}).format(price);
-}
-
-type CartItemType = {
-	id: string;
-	quantity: number;
-	product: {
-		id: string;
-		name: string;
-		slug: string;
-		price: number;
-		stock: number;
-		images: string[] | null;
-	};
-};
+import { formatCurrency } from "@/utils/format";
 
 interface CartItemCardProps {
-	item: CartItemType;
+	item: CartItemWithProduct;
 	isLight: boolean;
 	onUpdateQuantity: (cartItemId: string, quantity: number) => void;
 	onRemove: (cartItemId: string) => void;
@@ -112,7 +93,7 @@ function CartItemCard({
 						className="mt-1 font-bold"
 						style={{ color: isLight ? "#667eea" : "#a855f7" }}
 					>
-						{formatPrice(item.product.price)}
+						{formatCurrency(item.product.price)}
 					</StyledText>
 				</StyledView>
 
@@ -200,7 +181,7 @@ function CartItemCard({
 			<StyledView className="ml-2 items-end justify-between">
 				<StyledView />
 				<StyledText className="font-bold text-foreground text-sm">
-					{formatPrice(itemTotal)}
+					{formatCurrency(itemTotal)}
 				</StyledText>
 			</StyledView>
 		</AnimatedView>
@@ -359,7 +340,7 @@ export default function CartScreen() {
 								<RefreshControl refreshing={isRefetching} onRefresh={refetch} />
 							}
 						>
-							{cartItems.map((item: CartItemType) => (
+							{cartItems.map((item: CartItemWithProduct) => (
 								<CartItemCard
 									key={item.id}
 									item={item}
@@ -393,7 +374,7 @@ export default function CartScreen() {
 										{itemCount} {itemCount === 1 ? "item" : "items"}
 									</StyledText>
 									<StyledText className="font-bold text-foreground text-xl">
-										{formatPrice(subtotal)}
+										{formatCurrency(subtotal)}
 									</StyledText>
 								</StyledView>
 							</StyledView>

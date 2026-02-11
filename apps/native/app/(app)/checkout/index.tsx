@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { Courier } from "@simple-commerce/schema";
+import type { Address, Courier } from "@simple-commerce/schema";
 import type { Href } from "expo-router";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -19,23 +19,6 @@ import { config, formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useCart } from "@/hooks/cart";
 import { useAddresses, useCheckout, useShippingCost } from "@/hooks/checkout";
-
-type AddressType = {
-	id: string;
-	label: string;
-	recipientName: string;
-	phone: string;
-	cityId: string;
-	cityName: string;
-	provinceName: string;
-	postalCode: string;
-	address: string;
-	isDefault: boolean;
-	// V2 fields
-	destinationId: number | null;
-	districtName: string | null;
-	subdistrictName: string | null;
-};
 
 type ShippingOption = {
 	courier: string;
@@ -54,7 +37,7 @@ const COURIER_NAMES: Record<Courier, string> = {
 };
 
 interface AddressCardProps {
-	address: AddressType;
+	address: Address;
 	isSelected: boolean;
 	onSelect: () => void;
 	onEdit: () => void;
@@ -68,7 +51,8 @@ function AddressCard({
 	onEdit,
 	isLight,
 }: AddressCardProps) {
-	const needsUpdate = !address.destinationId;
+	// Use explicit null check to handle destinationId: 0 correctly
+	const needsUpdate = address.destinationId === null;
 
 	return (
 		<TouchableOpacity onPress={onSelect} activeOpacity={0.7}>
@@ -282,18 +266,23 @@ export default function CheckoutScreen() {
 
 	// Get addresses
 	const { data: addressesData, isLoading: addressesLoading } = useAddresses();
-	const addresses = (addressesData as AddressType[] | undefined) ?? [];
+	const addresses = addressesData ?? [];
 
-	// Set default address on load
-	const defaultAddress = addresses.find((a) => a.isDefault);
-	if (defaultAddress && !selectedAddressId && addresses.length > 0) {
-		setSelectedAddressId(defaultAddress.id);
-	}
+	// Set default address on load - use useEffect to avoid state updates during render
+	useEffect(() => {
+		if (addresses.length > 0 && !selectedAddressId) {
+			const defaultAddr = addresses.find((a) => a.isDefault);
+			if (defaultAddr) {
+				setSelectedAddressId(defaultAddr.id);
+			}
+		}
+	}, [addresses, selectedAddressId]);
 
 	const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
-	// Check if selected address needs to be updated (no destinationId)
-	const addressNeedsUpdate = selectedAddress && !selectedAddress.destinationId;
+	// Check if selected address needs to be updated (use explicit null check for destinationId: 0)
+	const addressNeedsUpdate =
+		selectedAddress && selectedAddress.destinationId === null;
 
 	// Calculate total weight (in production, sum product weights)
 	const totalWeight = itemCount * config.checkout.defaultProductWeight;

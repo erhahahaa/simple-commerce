@@ -1,4 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import type {
+	OrderStatus,
+	PaymentStatus,
+	ShippingStatus,
+} from "@simple-commerce/schema";
 import type { Href } from "expo-router";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
@@ -8,7 +13,6 @@ import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GradientBackground } from "@/components/gradient-background";
 import { AnimatedView, StyledText, StyledView } from "@/components/uniwind";
-import { formatCurrency } from "@/config";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import {
 	type SimulationStep,
@@ -16,39 +20,7 @@ import {
 	useOrderById,
 	useSimulateOrder,
 } from "@/hooks/checkout";
-
-type OrderStatus =
-	| "pending"
-	| "processing"
-	| "shipped"
-	| "delivered"
-	| "cancelled";
-type PaymentStatus = "pending" | "paid" | "failed" | "expired" | "refunded";
-type ShippingStatus =
-	| "pending"
-	| "processing"
-	| "shipped"
-	| "in_transit"
-	| "delivered"
-	| "returned";
-
-function formatDate(date: Date) {
-	return new Intl.DateTimeFormat("id-ID", {
-		day: "numeric",
-		month: "long",
-		year: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(new Date(date));
-}
-
-function formatShortDate(date: Date) {
-	return new Intl.DateTimeFormat("id-ID", {
-		day: "numeric",
-		month: "short",
-		year: "numeric",
-	}).format(new Date(date));
-}
+import { formatCurrency, formatDateLong, formatDateOnly } from "@/utils/format";
 
 function getStatusColor(status: OrderStatus) {
 	switch (status) {
@@ -426,7 +398,7 @@ export default function OrderDetailScreen() {
 										: order.status}
 								</StyledText>
 								<StyledText className="text-muted text-sm">
-									{formatDate(order.createdAt)}
+									{formatDateLong(order.createdAt)}
 								</StyledText>
 							</StyledView>
 						</StyledView>
@@ -692,7 +664,7 @@ export default function OrderDetailScreen() {
 							<StyledView className="flex-row justify-between py-2">
 								<StyledText className="text-muted">Paid At</StyledText>
 								<StyledText className="text-foreground">
-									{formatShortDate(order.paidAt)}
+									{formatDateOnly(order.paidAt)}
 								</StyledText>
 							</StyledView>
 						)}
@@ -731,7 +703,7 @@ export default function OrderDetailScreen() {
 									Order Created
 								</StyledText>
 								<StyledText className="text-muted text-sm">
-									{formatDate(order.createdAt)}
+									{formatDateLong(order.createdAt)}
 								</StyledText>
 							</StyledView>
 						</StyledView>
@@ -753,7 +725,7 @@ export default function OrderDetailScreen() {
 										Payment Confirmed
 									</StyledText>
 									<StyledText className="text-muted text-sm">
-										{formatDate(order.paidAt)}
+										{formatDateLong(order.paidAt)}
 									</StyledText>
 								</StyledView>
 							</StyledView>
@@ -776,7 +748,7 @@ export default function OrderDetailScreen() {
 										Order Shipped
 									</StyledText>
 									<StyledText className="text-muted text-sm">
-										{formatDate(order.shipping.shippedAt)}
+										{formatDateLong(order.shipping.shippedAt)}
 									</StyledText>
 								</StyledView>
 							</StyledView>
@@ -795,7 +767,7 @@ export default function OrderDetailScreen() {
 										Order Delivered
 									</StyledText>
 									<StyledText className="text-muted text-sm">
-										{formatDate(order.shipping.deliveredAt)}
+										{formatDateLong(order.shipping.deliveredAt)}
 									</StyledText>
 								</StyledView>
 							</StyledView>
@@ -814,7 +786,7 @@ export default function OrderDetailScreen() {
 										Order Cancelled
 									</StyledText>
 									<StyledText className="text-muted text-sm">
-										{formatDate(order.updatedAt)}
+										{formatDateLong(order.updatedAt)}
 									</StyledText>
 								</StyledView>
 							</StyledView>

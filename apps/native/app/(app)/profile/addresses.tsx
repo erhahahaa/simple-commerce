@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import type { Address } from "@simple-commerce/schema";
 import { router } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
 import { Alert, TouchableOpacity } from "react-native";
@@ -18,19 +19,6 @@ import {
 	useDeleteAddress,
 	useSetDefaultAddress,
 } from "@/hooks/checkout";
-
-type Address = {
-	id: string;
-	label: string;
-	recipientName: string;
-	phone: string;
-	provinceName: string;
-	cityName: string;
-	district: string | null;
-	postalCode: string;
-	address: string;
-	isDefault: boolean;
-};
 
 function AddressCard({
 	address,
@@ -148,7 +136,8 @@ function AddressCard({
 			{/* Address Details */}
 			<StyledText className="text-muted text-sm">{address.address}</StyledText>
 			<StyledText className="mt-1 text-muted text-sm">
-				{address.district ? `${address.district}, ` : ""}
+				{address.subdistrictName ? `${address.subdistrictName}, ` : ""}
+				{address.districtName ? `${address.districtName}, ` : ""}
 				{address.cityName}, {address.provinceName} {address.postalCode}
 			</StyledText>
 		</StyledView>
@@ -270,7 +259,7 @@ export default function AddressesScreen() {
 							{addresses.map((address, _index) => (
 								<AddressCard
 									key={address.id}
-									address={address as Address}
+									address={address}
 									onSetDefault={() => handleSetDefault(address.id)}
 									onDelete={() => handleDelete(address.id)}
 									isSettingDefault={
