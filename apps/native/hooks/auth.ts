@@ -106,6 +106,10 @@ export function useSocialAuth(provider: SocialProvider) {
 			// Note: Session refetch is handled by URL listener in _layout.tsx
 			// since signIn.social() resolves before OAuth completes
 
+			// Delay to allow SecureStore to persist cookies before refetching session
+			await new Promise((resolve) => setTimeout(resolve, 150));
+			emitSessionEvent("refetch");
+
 			return {
 				success: true,
 				message: "Signed in successfully",
