@@ -60,33 +60,47 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 	const [session, setSession] = useState<SessionData>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
-	const fetchSession = useCallback(async () => {
-		try {
-			const res = await authClient.getSession();
-			if (res.error || res.data === null) {
+	const fetchSession = useCallback(async (retries = 1) => {
+		for (let attempt = 0; attempt < retries; attempt++) {
+			try {
+				const res = await authClient.getSession();
+				if (res.data?.session) {
+					setSession({
+						success: true,
+						data: res.data,
+					} as GetSessionResponse);
+					setIsLoading(false);
+					return;
+				}
+				// No session found, wait before retry (exponential backoff)
+				if (attempt < retries - 1) {
+					await new Promise((r) => setTimeout(r, 100 * (attempt + 1)));
+				}
+			} catch {
+				// On error, continue to next retry
+				if (attempt < retries - 1) {
+					await new Promise((r) => setTimeout(r, 100 * (attempt + 1)));
+					continue;
+				}
 				setSession({
 					success: false,
-					error: res.error?.message ?? "An unknown error occurred",
+					error: "Failed to fetch session",
 				});
-			} else {
-				setSession({
-					success: true,
-					data: res.data,
-				} as GetSessionResponse);
+				setIsLoading(false);
+				return;
 			}
-		} catch {
-			setSession({
-				success: false,
-				error: "Failed to fetch session",
-			});
-		} finally {
-			setIsLoading(false);
 		}
+		// All retries exhausted with no session
+		setSession({
+			success: false,
+			error: "No session found",
+		});
+		setIsLoading(false);
 	}, []);
 
 	const refetch = useCallback(async () => {
 		setIsLoading(true);
-		await fetchSession();
+		await fetchSession(3);
 	}, [fetchSession]);
 
 	const clearSession = useCallback(() => {

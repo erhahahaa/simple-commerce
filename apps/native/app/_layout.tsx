@@ -1,8 +1,9 @@
 import "@/global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
+import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
@@ -21,8 +22,28 @@ const screenBackgroundColors = {
 
 function StackLayout() {
 	const { isLight } = useAppTheme();
-	const { isAuthenticated, isLoading } = useSession();
+	const { isAuthenticated, isLoading, refetch } = useSession();
 	const router = useRouter();
+	const hasHandledOAuthCallback = useRef(false);
+
+	// Listen for deep link returns from OAuth
+	useEffect(() => {
+		const subscription = Linking.addEventListener("url", async () => {
+			// Prevent multiple refetches for the same OAuth callback
+			if (hasHandledOAuthCallback.current) return;
+			hasHandledOAuthCallback.current = true;
+
+			// Wait for SecureStore to persist cookies from OAuth callback
+			await new Promise((resolve) => setTimeout(resolve, 200));
+			await refetch();
+
+			// Reset flag after a delay to allow future OAuth flows
+			setTimeout(() => {
+				hasHandledOAuthCallback.current = false;
+			}, 1000);
+		});
+		return () => subscription.remove();
+	}, [refetch]);
 
 	useEffect(() => {
 		if (!isLoading) {

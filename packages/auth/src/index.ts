@@ -27,23 +27,25 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 		sendResetPassword: async ({ user, token }) => {
-			void mailer.sendResetPasswordEmail({
+			await mailer.sendResetPasswordEmail({
 				to: user.email,
 				name: user.name ?? undefined,
 				token,
 			});
 		},
 		onPasswordReset: async ({ user }) => {
-			await markUserVerified(user.id);
-			void mailer.sendPasswordResetConfirmation({
-				to: user.email,
-				name: user.name ?? undefined,
-			});
+			await Promise.allSettled([
+				markUserVerified(user.id),
+				mailer.sendPasswordResetConfirmation({
+					to: user.email,
+					name: user.name ?? undefined,
+				}),
+			]);
 		},
 	},
 	emailVerification: {
 		sendVerificationEmail: async ({ user, token }) => {
-			void mailer.sendVerificationEmail({
+			await mailer.sendVerificationEmail({
 				to: user.email,
 				name: user.name ?? undefined,
 				token,
