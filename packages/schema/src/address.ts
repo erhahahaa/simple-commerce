@@ -33,10 +33,12 @@ export const CreateAddressSchema = z.object({
 	label: z.string().min(1).max(50),
 	recipientName: z.string().min(1).max(100),
 	phone: z.string().min(10).max(15),
-	provinceId: z.string(),
-	provinceName: z.string(),
-	cityId: z.string(),
-	cityName: z.string(),
+	// Legacy fields - optional for V2, kept for backward compatibility
+	provinceId: z.string().optional().default(""),
+	provinceName: z.string().min(1),
+	cityId: z.string().optional().default(""),
+	cityName: z.string().min(1),
+	// V2 location fields
 	districtId: z.string().optional(),
 	districtName: z.string().optional(),
 	subdistrictId: z.string().optional(),

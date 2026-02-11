@@ -47,21 +47,30 @@ export type CartResponse = z.infer<typeof CartResponseSchema>;
 
 // Input schemas
 export const AddToCartSchema = z.object({
-	productId: z.string(),
-	quantity: z.number().int().min(1).default(1),
+	productId: z.string().min(1, "Product ID is required"),
+	quantity: z
+		.number()
+		.int()
+		.min(1, "Quantity must be at least 1")
+		.max(99, "Maximum quantity is 99")
+		.default(1),
 });
 
 export type AddToCart = z.infer<typeof AddToCartSchema>;
 
 export const UpdateCartItemSchema = z.object({
-	cartItemId: z.string(),
-	quantity: z.number().int().min(1),
+	cartItemId: z.string().min(1, "Cart item ID is required"),
+	quantity: z
+		.number()
+		.int()
+		.min(1, "Quantity must be at least 1")
+		.max(99, "Maximum quantity is 99"),
 });
 
 export type UpdateCartItem = z.infer<typeof UpdateCartItemSchema>;
 
 export const RemoveFromCartSchema = z.object({
-	cartItemId: z.string(),
+	cartItemId: z.string().min(1, "Cart item ID is required"),
 });
 
 export type RemoveFromCart = z.infer<typeof RemoveFromCartSchema>;

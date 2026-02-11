@@ -96,12 +96,19 @@ export type OrderWithItems = z.infer<typeof OrderWithItemsSchema>;
 
 // Create order input (checkout)
 export const CreateOrderSchema = z.object({
-	addressId: z.string(),
+	addressId: z.string().min(1, "Address ID is required"),
 	// Shipping details
-	courier: z.string(), // e.g., "jne", "pos", "tiki"
-	service: z.string(), // e.g., "REG", "YES", "OKE"
-	shippingCost: z.number().int().nonnegative(),
-	estimatedDays: z.number().int().positive().optional(),
+	courier: z.string().min(1, "Courier is required"), // e.g., "jne", "pos", "tiki"
+	service: z.string().min(1, "Service is required"), // e.g., "REG", "YES", "OKE"
+	shippingCost: z
+		.number()
+		.int()
+		.nonnegative("Shipping cost must be non-negative"),
+	estimatedDays: z
+		.number()
+		.int()
+		.positive("Estimated days must be positive")
+		.optional(),
 });
 
 export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
@@ -128,7 +135,7 @@ export type OrderListResponse = z.infer<typeof OrderListResponseSchema>;
 
 // Update order status (admin)
 export const UpdateOrderStatusSchema = z.object({
-	orderId: z.string(),
+	orderId: z.string().min(1, "Order ID is required"),
 	status: OrderStatusSchema,
 });
 
@@ -136,8 +143,11 @@ export type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
 
 // Update shipping info
 export const UpdateShippingSchema = z.object({
-	orderId: z.string(),
-	trackingNumber: z.string().optional(),
+	orderId: z.string().min(1, "Order ID is required"),
+	trackingNumber: z
+		.string()
+		.min(1, "Tracking number cannot be empty")
+		.optional(),
 	status: ShippingStatusSchema.optional(),
 });
 
@@ -163,7 +173,7 @@ export type SimulationStep = z.infer<typeof SimulationStepSchema>;
 
 // Simulate order step input
 export const SimulateStepInputSchema = z.object({
-	orderId: z.string(),
+	orderId: z.string().min(1, "Order ID is required"),
 	step: SimulationStepSchema,
 });
 

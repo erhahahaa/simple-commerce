@@ -6,14 +6,14 @@ import { CategorySchema } from "./category";
 // ============================================
 
 export const ProductSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	slug: z.string(),
+	id: z.string().min(1, "Product ID is required"),
+	name: z.string().min(1, "Product name is required"),
+	slug: z.string().min(1, "Product slug is required"),
 	description: z.string().nullable(),
-	price: z.number().int(), // Price in cents (IDR)
-	stock: z.number().int(),
-	images: z.array(z.string()).nullable(),
-	categoryId: z.string().nullable(),
+	price: z.number().int().min(0, "Price must be non-negative"), // Price in cents (IDR)
+	stock: z.number().int().min(0, "Stock must be non-negative"),
+	images: z.array(z.string().url("Invalid image URL")).nullable(),
+	categoryId: z.string().min(1, "Category ID is required").nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 });
@@ -27,17 +27,17 @@ export const ProductWithCategorySchema = ProductSchema.extend({
 export type ProductWithCategory = z.infer<typeof ProductWithCategorySchema>;
 
 export const CreateProductSchema = z.object({
-	name: z.string().min(1, "Name is required").max(200),
+	name: z.string().min(1, "Name is required").max(200, "Name is too long"),
 	slug: z
 		.string()
-		.min(1)
-		.max(200)
+		.min(1, "Slug is required")
+		.max(200, "Slug is too long")
 		.regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes"),
-	description: z.string().max(2000).optional(),
-	price: z.number().int().min(0, "Price must be positive"),
-	stock: z.number().int().min(0, "Stock must be positive").default(0),
-	images: z.array(z.string().url()).default([]),
-	categoryId: z.string().optional(),
+	description: z.string().max(2000, "Description is too long").optional(),
+	price: z.number().int().min(0, "Price must be non-negative"),
+	stock: z.number().int().min(0, "Stock must be non-negative").default(0),
+	images: z.array(z.string().url("Invalid image URL")).default([]),
+	categoryId: z.string().min(1, "Category ID is required").optional(),
 });
 
 export type CreateProduct = z.infer<typeof CreateProductSchema>;
@@ -47,11 +47,16 @@ export const UpdateProductSchema = CreateProductSchema.partial();
 export type UpdateProduct = z.infer<typeof UpdateProductSchema>;
 
 export const ProductListQuerySchema = z.object({
-	categoryId: z.string().optional(),
-	categorySlug: z.string().optional(),
-	search: z.string().optional(),
-	limit: z.number().int().min(1).max(100).default(20),
-	offset: z.number().int().min(0).default(0),
+	categoryId: z.string().min(1, "Category ID is required").optional(),
+	categorySlug: z.string().min(1, "Category slug is required").optional(),
+	search: z.string().max(100, "Search query is too long").optional(),
+	limit: z
+		.number()
+		.int()
+		.min(1, "Limit must be at least 1")
+		.max(100, "Limit cannot exceed 100")
+		.default(20),
+	offset: z.number().int().min(0, "Offset must be non-negative").default(0),
 	sortBy: z.enum(["createdAt", "price", "name"]).default("createdAt"),
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
