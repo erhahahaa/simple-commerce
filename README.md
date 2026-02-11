@@ -7,7 +7,7 @@ A full-stack e-commerce mobile application built with React Native (Expo) and a 
 | Layer | Technology |
 |-------|------------|
 | Mobile App | React Native (Expo SDK 54) |
-| UI Library | HeroUI Native + Tailwind CSS (NativeWind) |
+| UI Library | HeroUI Native + Tailwind CSS (Uniwind) |
 | Backend | Hono + ORPC (Type-safe RPC) |
 | Database | PostgreSQL + Drizzle ORM |
 | Authentication | Better Auth |
