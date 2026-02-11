@@ -36,11 +36,12 @@ export function useDefaultAddress() {
  * Get address by ID
  */
 export function useAddressById(id: string) {
-	return useQuery(
-		orpc.address.getById.queryOptions({
+	return useQuery({
+		...orpc.address.getById.queryOptions({
 			input: { id },
 		}),
-	);
+		enabled: !!id,
+	});
 }
 
 /**
@@ -63,9 +64,12 @@ export function useCreateAddress() {
 export function useUpdateAddress() {
 	return useMutation(
 		orpc.address.update.mutationOptions({
-			onSuccess: () => {
+			onSuccess: (_data, variables) => {
 				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.LIST });
 				queryClient.invalidateQueries({ queryKey: ADDRESS_KEYS.GET_DEFAULT });
+				queryClient.invalidateQueries({
+					queryKey: ADDRESS_KEYS.GET_BY_ID(variables.id),
+				});
 			},
 		}),
 	);
