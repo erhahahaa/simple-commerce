@@ -22,6 +22,7 @@
 	},
 	"type": "module",
 	"scripts": {
+		"clean": "turbo clean && git clean -xdf .turbo node_modules",
 		"dev": "turbo dev",
 		"build": "turbo build",
 		"check-types": "turbo check-types",
