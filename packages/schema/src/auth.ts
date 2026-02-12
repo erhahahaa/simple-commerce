@@ -32,7 +32,7 @@ export const SignInRequestSchema = z.object({
 		.min(1, "Email is required")
 		.max(255, "Email is too long"),
 	password: PasswordSchema,
-	rememberMe: z.boolean().optional(),
+	rememberMe: z.boolean().default(true).optional(),
 });
 export type SignInRequest = z.infer<typeof SignInRequestSchema>;
 
