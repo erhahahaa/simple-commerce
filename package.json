@@ -54,7 +54,6 @@
 		"@simple-commerce/config": "workspace:*",
 		"@types/bun": "catalog:",
 		"md-to-pdf": "^5.2.5",
-		"puppeteer": "^24.37.2",
 		"turbo": "^2.6.3",
 		"typescript": "catalog:"
 	},

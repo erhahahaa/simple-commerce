@@ -4,7 +4,7 @@
 	"private": true,
 	"main": "expo-router/entry",
 	"scripts": {
-		"clean": "git clean -xdf .turbo node_modules",
+		"clean": "git clean -xdf .turbo .expo node_modules",
 		"start": "expo start",
 		"dev": "expo start --clear",
 		"android": "expo run:android",
