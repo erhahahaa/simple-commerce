@@ -4,7 +4,7 @@
  * Reads navigation.json to determine correct order
  */
 
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { mdToPdf } from "md-to-pdf";
 
@@ -36,9 +36,7 @@ for (const section of navData.sections) {
 }
 
 // Also add README.md at the beginning
-const readmePath = join(docsDir, "README.md");
 try {
-	const readmeContent = readFileSync(readmePath, "utf-8");
 	combinedMarkdown =
 		"# Table of Contents\n\n* Simple Commerce Documentation Overview\n* Meta Documentation\n* Overview\n* Getting Started\n* Architecture\n* Database\n* API Reference\n* Mobile Screens\n* Integrations\n* Configuration\n* Development\n* Deployment\n* Guides\n\n---\n\n" +
 		combinedMarkdown;

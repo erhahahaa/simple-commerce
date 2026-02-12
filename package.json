@@ -40,7 +40,8 @@
 		"db:down": "turbo -F @simple-commerce/db db:down",
 		"email:dev": "turbo -F @simple-commerce/mailer email:dev",
 		"check": "biome check --write .",
-		"docs:pdf": "bun run scripts/generate-pdf.ts"
+		"docs:pdf": "bun run scripts/generate-pdf.ts",
+		"docs:pdf:install": "bun run scripts/generate-installation-pdf.ts"
 	},
 	"dependencies": {
 		"@simple-commerce/env": "workspace:*",

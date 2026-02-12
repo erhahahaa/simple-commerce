@@ -8,6 +8,7 @@ dist
 build
 *.tsbuildinfo
 simple-commerce-documentation.pdf
+simple-commerce-installation-guide.pdf
 
 # Environment variables
 .env

@@ -11,7 +11,7 @@
 		"ios": "expo run:ios",
 		"prebuild": "expo prebuild",
 		"web": "expo start --web",
-		"check-types": "tsc --noEmit",
+		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@better-auth/expo": "catalog:",
