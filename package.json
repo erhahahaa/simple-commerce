@@ -39,7 +39,8 @@
 		"db:stop": "turbo -F @simple-commerce/db db:stop",
 		"db:down": "turbo -F @simple-commerce/db db:down",
 		"email:dev": "turbo -F @simple-commerce/mailer email:dev",
-		"check": "biome check --write ."
+		"check": "biome check --write .",
+		"docs:pdf": "bun run scripts/generate-pdf.ts"
 	},
 	"dependencies": {
 		"@simple-commerce/env": "workspace:*",
@@ -50,6 +51,8 @@
 		"@biomejs/biome": "^2.2.0",
 		"@simple-commerce/config": "workspace:*",
 		"@types/bun": "catalog:",
+		"md-to-pdf": "^5.2.5",
+		"puppeteer": "^24.37.2",
 		"turbo": "^2.6.3",
 		"typescript": "catalog:"
 	},
