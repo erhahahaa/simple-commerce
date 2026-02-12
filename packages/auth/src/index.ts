@@ -24,6 +24,14 @@ export const auth = betterAuth({
 				]
 			: []),
 	],
+	session: {
+		expiresIn: 60 * 60 * 24, // 1 day (default without remember me)
+		updateAge: 60 * 60 * 12, // Update session every 12 hours
+		cookieCache: {
+			enabled: true,
+			maxAge: 60 * 5, // Cache for 5 minutes
+		},
+	},
 	emailAndPassword: {
 		enabled: true,
 		sendResetPassword: async ({ user, token }) => {
