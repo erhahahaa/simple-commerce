@@ -1,0 +1,179 @@
+{
+	"sections": [
+		{
+			"id": "00-meta",
+			"title": "Meta Documentation",
+			"description": "Documentation about documentation",
+			"files": [
+				{
+					"id": "01-how-to-use-docs",
+					"title": "How to Use This Documentation"
+				},
+				{
+					"id": "02-contributing-to-docs",
+					"title": "Contributing to Documentation"
+				},
+				{
+					"id": "03-documentation-standards",
+					"title": "Documentation Standards"
+				},
+				{ "id": "04-maintaining-docs", "title": "Maintaining Documentation" }
+			]
+		},
+		{
+			"id": "01-overview",
+			"title": "Overview",
+			"description": "Project introduction and overview",
+			"files": [
+				{ "id": "01-introduction", "title": "Introduction" },
+				{ "id": "02-features", "title": "Features" },
+				{ "id": "03-tech-stack", "title": "Technology Stack" },
+				{ "id": "04-project-structure", "title": "Project Structure" }
+			]
+		},
+		{
+			"id": "02-getting-started",
+			"title": "Getting Started",
+			"description": "Setup and installation guides",
+			"files": [
+				{ "id": "01-prerequisites", "title": "Prerequisites" },
+				{ "id": "02-installation", "title": "Installation" },
+				{ "id": "03-environment-setup", "title": "Environment Setup" },
+				{ "id": "04-database-setup", "title": "Database Setup" },
+				{ "id": "05-running-locally", "title": "Running Locally" },
+				{ "id": "06-mobile-app-setup", "title": "Mobile App Setup" }
+			]
+		},
+		{
+			"id": "03-architecture",
+			"title": "Architecture",
+			"description": "System architecture and design",
+			"files": [
+				{ "id": "01-system-overview", "title": "System Overview" },
+				{ "id": "02-monorepo-structure", "title": "Monorepo Structure" },
+				{
+					"id": "03-mobile-app-architecture",
+					"title": "Mobile App Architecture"
+				},
+				{ "id": "04-backend-architecture", "title": "Backend Architecture" },
+				{ "id": "05-data-flow", "title": "Data Flow" }
+			]
+		},
+		{
+			"id": "04-database",
+			"title": "Database",
+			"description": "Database schema and tables",
+			"files": [
+				{ "id": "01-overview", "title": "Database Overview" },
+				{ "id": "02-authentication-tables", "title": "Authentication Tables" },
+				{ "id": "03-category-table", "title": "Category Table" },
+				{ "id": "04-product-table", "title": "Product Table" },
+				{ "id": "05-cart-tables", "title": "Cart Tables" },
+				{ "id": "06-address-table", "title": "Address Table" },
+				{ "id": "07-order-tables", "title": "Order Tables" },
+				{ "id": "08-shipping-table", "title": "Shipping Table" },
+				{ "id": "09-wishlist-table", "title": "Wishlist Table" },
+				{ "id": "10-relations", "title": "Table Relations" }
+			]
+		},
+		{
+			"id": "05-api",
+			"title": "API Reference",
+			"description": "API endpoints and procedures",
+			"files": [
+				{ "id": "01-overview", "title": "API Overview" },
+				{ "id": "02-authentication", "title": "Authentication" },
+				{ "id": "03-category-router", "title": "Category Router" },
+				{ "id": "04-product-router", "title": "Product Router" },
+				{ "id": "05-cart-router", "title": "Cart Router" },
+				{ "id": "06-address-router", "title": "Address Router" },
+				{ "id": "07-shipping-router", "title": "Shipping Router" },
+				{ "id": "08-order-router", "title": "Order Router" },
+				{ "id": "09-payment-router", "title": "Payment Router" },
+				{ "id": "10-wishlist-router", "title": "Wishlist Router" }
+			]
+		},
+		{
+			"id": "06-mobile-screens",
+			"title": "Mobile Screens",
+			"description": "Mobile app screen documentation",
+			"files": [
+				{ "id": "01-navigation-structure", "title": "Navigation Structure" },
+				{ "id": "02-home-screen", "title": "Home Screen" },
+				{ "id": "03-products-screen", "title": "Products Screen" },
+				{ "id": "04-product-detail", "title": "Product Detail" },
+				{ "id": "05-cart-screen", "title": "Cart Screen" },
+				{ "id": "06-checkout-flow", "title": "Checkout Flow" },
+				{ "id": "07-orders-screen", "title": "Orders Screen" },
+				{ "id": "08-order-detail", "title": "Order Detail" },
+				{ "id": "09-profile-screens", "title": "Profile Screens" }
+			]
+		},
+		{
+			"id": "07-integrations",
+			"title": "Integrations",
+			"description": "External service integrations",
+			"files": [
+				{ "id": "01-midtrans-overview", "title": "Midtrans Overview" },
+				{ "id": "02-midtrans-setup", "title": "Midtrans Setup" },
+				{ "id": "03-midtrans-payment-flow", "title": "Midtrans Payment Flow" },
+				{ "id": "04-midtrans-webhook", "title": "Midtrans Webhook" },
+				{ "id": "05-raja-ongkir-overview", "title": "Raja Ongkir Overview" },
+				{ "id": "06-raja-ongkir-setup", "title": "Raja Ongkir Setup" },
+				{ "id": "07-shipping-calculation", "title": "Shipping Calculation" },
+				{ "id": "08-resend-email", "title": "Resend Email" }
+			]
+		},
+		{
+			"id": "08-configuration",
+			"title": "Configuration",
+			"description": "Configuration files and environment",
+			"files": [
+				{ "id": "01-environment-variables", "title": "Environment Variables" },
+				{ "id": "02-server-env", "title": "Server Environment" },
+				{ "id": "03-native-env", "title": "Native Environment" },
+				{ "id": "04-turborepo-config", "title": "Turborepo Configuration" },
+				{ "id": "05-biome-config", "title": "Biome Configuration" },
+				{ "id": "06-typescript-config", "title": "TypeScript Configuration" }
+			]
+		},
+		{
+			"id": "09-development",
+			"title": "Development",
+			"description": "Development workflow and tools",
+			"files": [
+				{ "id": "01-available-scripts", "title": "Available Scripts" },
+				{ "id": "02-database-commands", "title": "Database Commands" },
+				{ "id": "03-code-quality", "title": "Code Quality" },
+				{ "id": "04-git-workflow", "title": "Git Workflow" },
+				{ "id": "05-troubleshooting", "title": "Troubleshooting" }
+			]
+		},
+		{
+			"id": "10-deployment",
+			"title": "Deployment",
+			"description": "Deployment guides",
+			"files": [
+				{ "id": "01-overview", "title": "Deployment Overview" },
+				{ "id": "02-backend-deployment", "title": "Backend Deployment" },
+				{ "id": "03-mobile-build", "title": "Mobile Build" },
+				{ "id": "04-production-checklist", "title": "Production Checklist" }
+			]
+		},
+		{
+			"id": "11-guides",
+			"title": "Guides",
+			"description": "How-to guides",
+			"files": [
+				{ "id": "01-adding-new-feature", "title": "Adding a New Feature" },
+				{
+					"id": "02-adding-new-api-endpoint",
+					"title": "Adding a New API Endpoint"
+				},
+				{ "id": "03-adding-new-screen", "title": "Adding a New Screen" },
+				{ "id": "04-database-migrations", "title": "Database Migrations" },
+				{ "id": "05-testing-guide", "title": "Testing Guide" }
+			]
+		}
+	]
+}
