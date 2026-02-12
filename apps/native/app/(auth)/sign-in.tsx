@@ -42,7 +42,7 @@ export default function SignInScreen() {
 		defaultValues: {
 			email: "",
 			password: "",
-			rememberMe: false,
+			rememberMe: true,
 		},
 	});
 

@@ -123,6 +123,7 @@ export function useForgotPassword() {
 	return useMutation({
 		mutationKey: ["forgot-password"],
 		mutationFn: async (body: ForgotPasswordRequest) => {
+			queryClient.clear();
 			const res = await authClient.requestPasswordReset(body);
 			if (res.error) {
 				return {

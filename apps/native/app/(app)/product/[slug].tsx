@@ -33,7 +33,9 @@ export default function ProductDetailScreen() {
 	const addToCartMutation = useAddToCart();
 
 	// Wishlist hooks
-	const { data: isInWishlist } = useIsInWishlist(product?.id ?? "");
+	const { data: isInWishlist, refetch: refetchWishlist } = useIsInWishlist(
+		product?.id ?? "",
+	);
 	const toggleWishlistMutation = useToggleWishlist();
 
 	const productData = product as {
@@ -75,10 +77,10 @@ export default function ProductDetailScreen() {
 		);
 	};
 
-	const handleToggleWishlist = () => {
+	const handleToggleWishlist = async () => {
 		if (!productData) return;
 
-		toggleWishlistMutation.mutate(
+		await toggleWishlistMutation.mutateAsync(
 			{ productId: productData.id },
 			{
 				onSuccess: (result) => {
@@ -99,6 +101,8 @@ export default function ProductDetailScreen() {
 				},
 			},
 		);
+
+		await refetchWishlist();
 	};
 
 	const increaseQuantity = () => {
@@ -184,9 +188,15 @@ export default function ProductDetailScreen() {
 					disabled={toggleWishlistMutation.isPending}
 				>
 					<Ionicons
-						name={isInWishlist ? "heart" : "heart-outline"}
+						name={isInWishlist?.inWishlist ? "heart" : "heart-outline"}
 						size={20}
-						color={isInWishlist ? "#ef4444" : isLight ? "#9ca3af" : "#6b7280"}
+						color={
+							isInWishlist?.inWishlist
+								? "#ef4444"
+								: isLight
+									? "#9ca3af"
+									: "#6b7280"
+						}
 					/>
 				</StyledPressable>
 			</AnimatedView>
