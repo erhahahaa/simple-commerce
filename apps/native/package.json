@@ -4,13 +4,14 @@
 	"private": true,
 	"main": "expo-router/entry",
 	"scripts": {
+		"clean": "git clean -xdf .turbo node_modules",
 		"start": "expo start",
 		"dev": "expo start --clear",
 		"android": "expo run:android",
 		"ios": "expo run:ios",
 		"prebuild": "expo prebuild",
 		"web": "expo start --web",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsc --noEmit",
 	},
 	"dependencies": {
 		"@better-auth/expo": "catalog:",

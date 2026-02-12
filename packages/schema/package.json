@@ -7,6 +7,9 @@
 		".": "./src/index.ts",
 		"./*": "./src/*.ts"
 	},
+	"scripts": {
+		"clean": "git clean -xdf .turbo node_modules"
+	},
 	"dependencies": {
 		"zod": "catalog:"
 	},
